@@ -1,33 +1,32 @@
-name: 🎯 Update Korean TV Playlist
+name: Update Korean TV Playlist
 
 on:
   schedule:
-    # 每天UTC时间20:00（北京时间凌晨4:00）运行
-    - cron: '0 20 * * *' [citation:1]
-  workflow_dispatch: # 允许手动触发
+    - cron: '0 20 * * *'  # 每天UTC时间20:00（北京时间凌晨4:00）运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   update-playlist:
-    name: 📺 Update Korean TV Channels
+    name: Update Korean TV Channels
     runs-on: ubuntu-latest
     
     steps:
       # 1. 检出仓库代码
-      - name: 📥 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         
       # 2. 设置Python环境
-      - name: 🐍 Set up Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           
       # 3. 安装依赖
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: pip install requests
           
       # 4. 运行更新脚本
-      - name: 🚀 Run update script
+      - name: Run update script
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python update_playlist.py
