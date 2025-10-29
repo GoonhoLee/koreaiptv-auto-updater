@@ -2,12 +2,9 @@ name: 🎯 Update Korean TV Playlist
 
 on:
   schedule:
-    # 每天UTC时间20:00运行（北京时间凌晨4:00）
-    - cron: '0 20 * * *'
-  workflow_dispatch:  # 允许手动触发
-  push:
-    paths:
-      - 'update_playlist.py'  # 当Python脚本更改时也自动运行
+    # 每天UTC时间20:00（北京时间凌晨4:00）运行
+    - cron: '0 20 * * *' [citation:1]
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   update-playlist:
@@ -18,9 +15,7 @@ jobs:
       # 1. 检出仓库代码
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT }}  # 使用有Gist权限的token
-          
+        
       # 2. 设置Python环境
       - name: 🐍 Set up Python
         uses: actions/setup-python@v4
@@ -29,29 +24,10 @@ jobs:
           
       # 3. 安装依赖
       - name: 📦 Install dependencies
-        run: |
-          pip install requests
-          pip list
+        run: pip install requests
           
-      # 4. 显示当前目录结构（用于调试）
-      - name: 📁 Debug file structure
-        run: |
-          echo "当前目录:"
-          pwd
-          echo "文件列表:"
-          ls -la
-          echo "Python文件内容:"
-          cat update_playlist.py || echo "文件不存在"
-          
-      # 5. 运行更新脚本
+      # 4. 运行更新脚本
       - name: 🚀 Run update script
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python update_playlist.py
-        
-      # 6. 显示执行结果
-      - name: ✅ Completion status
-        run: |
-          echo "🎉 GitHub Actions 执行完成！"
-          echo "📅 下次自动运行时间: UTC 20:00 (北京时间 04:00)"
-          echo "🔗 查看Gist: https://gist.github.com/GoonhoLee/9633c3cc086e124fe6d97c50f6321b39"
