@@ -1,0 +1,26 @@
+name: Update IPTV Playlist Daily
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 每天UTC时间20:00（北京时间凌晨4:00）运行
+  workflow_dispatch:       # 允许手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Update Gist
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: python update_playlist.py
