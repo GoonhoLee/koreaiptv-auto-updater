@@ -1,2 +1,29 @@
-# koreaiptv-auto-updater
-koreaiptv auto update playlist
+# 韩国IPTV自动更新器
+
+自动抓取和更新韩国电视频道的M3U播放列表。
+
+## 功能特点
+
+- 🔄 **自动更新**: 每6小时自动抓取最新的直播源
+- 🛡️ **备用方案**: 自动抓取失败时使用备用链接
+- 📺 **多频道支持**: 支持KBS、MBN等多个韩国频道
+- 🚀 **GitHub Actions**: 完全自动化运行
+- 📱 **M3U格式**: 兼容各种播放器
+
+## 频道列表
+
+- KBS 1TV (自动更新)
+- KBS 2TV (自动更新) 
+- MBN (自动更新)
+- TV CHOSUN
+- YTN
+- EBS 1TV
+- EBS 2TV
+- KBS World
+- Korea
+
+## 使用方法
+
+### 在线使用
+
+直接使用自动更新的播放列表：
