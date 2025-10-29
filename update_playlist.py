@@ -4,7 +4,7 @@ import os
 import re
 
 # 配置信息
-GIST_ID = "9633c3cc086e124fe6d97c50f6321b39"  # 请确保这是您存放播放列表的Gist ID
+GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"  # 请确保这是您存放播放列表的Gist ID
 GH_TOKEN = os.environ['GH_PAT']  # 从GitHub Secrets读取令牌
 
 def fetch_kbs_live_url(ch_code):
@@ -188,7 +188,7 @@ https://kbsworld-ott.akamaized.net/hls/live/2002341/kbsworld/master.m3u8
     }
     data = {
         "files": {
-            "zidong korean tv.m3u": {
+            "TV.m3u": {
                 "content": m3u_content
             }
         }
