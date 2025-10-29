@@ -2,7 +2,7 @@ name: Update Korean TV Playlist
 
 on:
   schedule:
-    - cron: '0 20 * * *'
+    - cron: '0 * * * *'  # 每隔1小时运行一次
   workflow_dispatch:
 
 jobs:
