@@ -1,0 +1,38 @@
+# update_playlist.py
+import requests
+import os
+
+# 配置信息
+GIST_ID = "https://gist.github.com/GoonhoLee/1eefb097a9b3ec25c79bbd4149066d41"  # 【必填】替换为你的Gist ID
+GH_TOKEN = os.environ['GH_PAT']  # 从仓库密钥中读取Token
+
+# 1. 构建最新的M3U内容
+# 这里是示例，您可以替换成自己的逻辑，比如从网上抓取
+new_content = "#EXTM3U\n"
+new_content += "# 我的自动更新IPTV列表\\n"
+new_content += "# 由GitHub Actions自动生成\\n\\n"
+# 示例频道
+channel_list = [
+    "#EXTINF:-1, Example Channel 1\\nhttp://example.com/ch1.m3u8",
+    "#EXTINF:-1, Example Channel 2\\nhttp://example.com/ch2.m3u8",
+]
+new_content += "\\n".join(channel_list)
+
+# 2. 通过API更新Gist
+gist_url = f"https://api.github.com/gists/{GIST_ID}"
+headers = {
+    "Authorization": f"token {GH_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
+data = {
+    "files": {
+        "TV.m3u8": {  # 【必填】替换为Gist中的文件名
+            "content": new_content
+        }
+    }
+}
+response = requests.patch(gist_url, headers=headers, json=data)
+if response.status_code == 200:
+    print("Gist更新成功！")
+else:
+    print(f"Gist更新失败: {response.status_code} - {response.text}")
