@@ -46,7 +46,7 @@ jobs:
       run: |
         python update_playlist.py
         
-    - name: Configure Git and commit changes
+    - name: Configure Git and push changes
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -54,26 +54,18 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-        # 先拉取最新的远程更改（在添加本地更改之前）
-        echo "📥 拉取最新的远程更改..."
-        git pull origin main
+        # 强制更新到最新版本，忽略本地更改
+        git fetch origin
+        git reset --hard origin/main
         
-        # 添加本地更改到暂存区
-        echo "📦 添加本地更改..."
+        # 添加所有更改
         git add -A
         
-        # 检查是否有更改需要提交
-        if git diff --staged --quiet; then
+        # 提交更改（如果有）
+        if ! git diff --staged --quiet; then
+          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+          git push origin main
+          echo "✅ 更改推送成功！"
+        else
           echo "✅ 没有需要提交的更改"
-          exit 0
         fi
-        
-        # 提交更改
-        echo "💾 提交更改..."
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-        
-        # 推送更改
-        echo "🚀 推送更改到远程仓库..."
-        git push origin main
-        
-        echo "🎉 更改推送成功！"
