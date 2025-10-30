@@ -2,8 +2,9 @@ name: Update M3U Playlist
 
 on:
   schedule:
+    # 每天UTC时间0点运行（韩国时间上午9点）
     - cron: '0 0 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # 允许手动触发
   push:
     paths:
       - 'update_playlist.py'
@@ -16,17 +17,17 @@ jobs:
   update-playlist:
     runs-on: ubuntu-latest
     
-    # 添加并发控制，防止多个工作流同时运行
+    # 添加并发控制，防止多个工作流同时运行造成冲突
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        # 获取完整历史记录
+        # 获取完整历史记录，避免浅克隆问题
         fetch-depth: 0
         
     - name: Set up Python
@@ -48,26 +49,48 @@ jobs:
       run: |
         python update_playlist.py
         
-    - name: Commit and push if changed
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Configure Git
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add -A
-        
-        # 配置 git 以正确处理 rebase
+        # 设置默认的pull行为为rebase
         git config pull.rebase true
         
-        # 拉取最新更改并 rebase
-        git pull origin main
-        
+    - name: Check for changes
+      id: check_changes
+      run: |
+        # 添加所有更改到暂存区
+        git add -A
         # 检查是否有更改需要提交
         if git diff --staged --quiet; then
+          echo "has_changes=false" >> $GITHUB_OUTPUT
           echo "No changes to commit"
-          exit 0
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected, will commit and push"
         fi
         
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M')"
+    - name: Pull latest changes
+      if: steps.check_changes.outputs.has_changes == 'true'
+      run: |
+        # 在提交前先拉取最新的远程更改
+        echo "Pulling latest changes from remote..."
+        git pull origin main
+        
+    - name: Commit changes
+      if: steps.check_changes.outputs.has_changes == 'true'
+      run: |
+        echo "Committing changes..."
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+        
+    - name: Push changes
+      if: steps.check_changes.outputs.has_changes == 'true'
+      run: |
+        echo "Pushing changes to remote..."
         git push origin main
-        echo "Changes pushed successfully"
+        echo "✅ Changes pushed successfully!"
+        
+    - name: No changes message
+      if: steps.check_changes.outputs.has_changes == 'false'
+      run: |
+        echo "✅ No changes to commit - everything is up to date!"
