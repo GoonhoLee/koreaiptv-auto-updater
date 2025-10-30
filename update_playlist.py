@@ -405,6 +405,8 @@ def get_mbn_m3u8_enhanced(driver):
                                 if isinstance(url_list, list):
                                     valid_urls = [url for url in url_list if any(domain in url for domain in target_domains)]
                                     m3u8_urls.extend(valid_urls)
+                            except:
+                                pass
                         else:
                             m3u8_urls.append(result)
             except Exception as e:
