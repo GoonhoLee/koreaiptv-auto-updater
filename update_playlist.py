@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist
-简洁高效版
+修复KBS2版本
 """
 
 import requests
@@ -93,8 +93,8 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     
     return list(set(m3u8_urls))
 
-def get_kbs_m3u8_simple(driver, url, channel_name):
-    """获取KBS的m3u8链接 - 简洁版"""
+def get_kbs_m3u8(driver, url, channel_name):
+    """获取KBS的m3u8链接 - 修复KBS2版本"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
@@ -102,37 +102,128 @@ def get_kbs_m3u8_simple(driver, url, channel_name):
         driver.get_log('performance')
         
         driver.get(url)
-        time.sleep(12)
         
+        # 更长的等待时间，确保视频播放器完全加载
+        print("⏳ 等待KBS播放器完全加载...")
+        time.sleep(15)
+        
+        m3u8_urls = []
         target_domains = ['kbs.co.kr', 'gscdn.kbs.co.kr']
         
-        # 网络请求监控
+        # 方法1: 深度网络请求监控
+        print("🔍 深度监控网络请求...")
         network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
         
-        # 根据频道选择正确的URL模式
-        if "1TV" in channel_name:
-            # 选择包含1tv的URL
-            tv_urls = [url for url in network_urls if '1tv' in url]
-            if tv_urls:
-                selected_url = tv_urls[0]
-                print(f"✅ 找到 {channel_name} 真实地址")
-                return selected_url
-        elif "2TV" in channel_name:
-            # 选择包含2tv的URL
-            tv_urls = [url for url in network_urls if '2tv' in url]
-            if tv_urls:
-                selected_url = tv_urls[0]
-                print(f"✅ 找到 {channel_name} 真实地址")
-                return selected_url
+        # 如果没找到，尝试刷新页面重新监控
+        if not m3u8_urls:
+            print("🔄 首次未找到，刷新页面重新尝试...")
+            driver.refresh()
+            time.sleep(10)
+            network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+            m3u8_urls.extend(network_urls)
         
-        # 如果没有找到特定频道的URL，使用第一个找到的URL
-        if network_urls:
-            selected_url = network_urls[0]
-            print(f"⚠️ 使用通用地址: {selected_url}")
+        # 方法2: 深度搜索页面源代码
+        print("🔍 深度搜索页面源代码...")
+        page_source = driver.page_source
+        
+        # 更全面的m3u8 URL匹配
+        m3u8_patterns = [
+            r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?',
+            r'["\'](https?://[^"\']*\.m3u8[^"\']*)["\']',
+            r'url\(["\']?(https?://[^"\']*\.m3u8[^"\']*)["\']?\)'
+        ]
+        
+        for pattern in m3u8_patterns:
+            source_urls = re.findall(pattern, page_source)
+            kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
+            m3u8_urls.extend(kbs_urls)
+        
+        # 方法3: 深度JavaScript分析
+        print("🔍 深度分析JavaScript...")
+        try:
+            # 执行JavaScript来获取可能的视频源
+            scripts = [
+                "Array.from(document.querySelectorAll('video')).map(v => v.src).filter(src => src && src.includes('.m3u8'))",
+                "Array.from(document.querySelectorAll('source')).map(s => s.src).filter(src => src && src.includes('.m3u8'))",
+                "Object.values(window).filter(val => typeof val === 'string' && val.includes('.m3u8') && val.includes('kbs'))",
+            ]
+            
+            for script in scripts:
+                try:
+                    result = driver.execute_script(f"return {script}")
+                    if result and isinstance(result, list):
+                        valid_urls = [url for url in result if any(domain in url for domain in target_domains)]
+                        m3u8_urls.extend(valid_urls)
+                        if valid_urls:
+                            print(f"💻 从JS执行找到: {valid_urls}")
+                except:
+                    continue
+                    
+        except Exception as e:
+            print(f"⚠️ 执行JavaScript时出错: {e}")
+        
+        # 方法4: 智能按钮点击
+        print("🔍 智能查找播放按钮...")
+        play_selectors = [
+            "button", 
+            ".btn-play", 
+            ".play-button",
+            "[onclick*='play']",
+            "[class*='play']",
+            "a[href*='javascript']"
+        ]
+        
+        for selector in play_selectors:
+            try:
+                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                for element in elements[:3]:  # 只尝试前几个
+                    try:
+                        text = element.text.lower()
+                        if any(keyword in text for keyword in ['play', '재생', '시작', '보기']):
+                            print(f"🖱️ 尝试点击播放按钮: {text}")
+                            driver.execute_script("arguments[0].click();", element)
+                            time.sleep(5)
+                            # 点击后再次监控网络
+                            new_urls = extract_m3u8_from_network_logs(driver, target_domains)
+                            m3u8_urls.extend(new_urls)
+                    except:
+                        continue
+            except Exception as e:
+                continue
+        
+        # 去重并智能选择
+        unique_urls = list(set(m3u8_urls))
+        
+        if unique_urls:
+            print(f"📊 找到 {len(unique_urls)} 个可能的m3u8链接")
+            
+            # 智能选择最佳URL
+            # 优先选择包含认证参数的URL
+            auth_urls = [url for url in unique_urls if '?' in url and any(param in url for param in ['Expires=', 'Policy=', 'Signature='])]
+            if auth_urls:
+                selected_url = auth_urls[0]
+                print(f"✅ 找到 {channel_name} 真实认证地址")
+            # 其次选择包含频道标识的URL
+            elif "1TV" in channel_name:
+                tv1_urls = [url for url in unique_urls if '1tv' in url.lower()]
+                selected_url = tv1_urls[0] if tv1_urls else unique_urls[0]
+            elif "2TV" in channel_name:
+                tv2_urls = [url for url in unique_urls if '2tv' in url.lower()]
+                selected_url = tv2_urls[0] if tv2_urls else unique_urls[0]
+            else:
+                selected_url = unique_urls[0]
+            
+            print(f"🔗 最终选择: {selected_url}")
             return selected_url
-        
-        print(f"❌ 未找到 {channel_name} 地址，使用静态地址")
-        return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8" if "1TV" in channel_name else "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+        else:
+            print(f"❌ 未找到 {channel_name} 的真实m3u8地址，使用静态地址")
+            # 返回静态地址
+            if "1TV" in channel_name:
+                return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
+            elif "2TV" in channel_name:
+                return "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+            return None
             
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
@@ -143,8 +234,9 @@ def get_real_mbn_url_from_response(auth_url):
     try:
         print(f"🔗 请求MBN认证链接: {auth_url}")
         
+        # 设置请求头，模拟浏览器
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': '*/*',
             'Referer': 'https://www.mbn.co.kr/vod/onair'
         }
@@ -152,13 +244,15 @@ def get_real_mbn_url_from_response(auth_url):
         response = requests.get(auth_url, headers=headers, timeout=10)
         
         if response.status_code == 200:
+            # 获取响应内容
             content = response.text.strip()
             
+            # 检查响应内容是否是有效的m3u8 URL
             if content.startswith('http') and '.m3u8' in content and 'hls-live.mbn.co.kr' in content:
-                print(f"✅ 获取到MBN地址")
+                print(f"✅ 获取到MBN地址: {content}")
                 return content
             else:
-                print(f"❌ 响应内容不是有效的m3u8 URL")
+                print(f"❌ 响应内容不是有效的m3u8 URL: {content}")
                 return None
         else:
             print(f"❌ 认证链接请求失败，状态码: {response.status_code}")
@@ -175,13 +269,15 @@ def get_mbn_m3u8_hd(driver):
         driver.get("https://www.mbn.co.kr/vod/onair")
         time.sleep(15)
         
+        m3u8_urls = []
         target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
         
-        # 网络请求监控
+        # 网络请求监控 - 查找认证链接
         network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
         
-        # 查找认证代理链接，优先选择高清版本
-        auth_urls = [url for url in network_urls if 'mbnStreamAuth' in url]
+        # 查找所有认证代理链接，优先选择高清版本
+        auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
         
         # 优先选择1000k高清版本
         hd_auth_urls = [url for url in auth_urls if '1000k' in url]
@@ -189,6 +285,7 @@ def get_mbn_m3u8_hd(driver):
         
         # 尝试高清版本
         if hd_auth_urls:
+            print(f"🔍 找到MBN高清认证链接: {hd_auth_urls[0]}")
             real_url = get_real_mbn_url_from_response(hd_auth_urls[0])
             if real_url:
                 print("🎯 成功获取高清版本 (1000k)")
@@ -196,18 +293,32 @@ def get_mbn_m3u8_hd(driver):
         
         # 如果高清版本失败，尝试标清版本
         if sd_auth_urls:
+            print(f"🔍 找到MBN标清认证链接: {sd_auth_urls[0]}")
             real_url = get_real_mbn_url_from_response(sd_auth_urls[0])
             if real_url:
                 print("📺 使用标清版本 (600k)")
                 return real_url
         
         # 如果自动发现的链接都失败，尝试直接构造高清认证链接
+        print("🔄 尝试构造高清认证链接...")
         hd_base_url = "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
         constructed_hd_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={hd_base_url}"
         
+        print(f"🔧 尝试构造的高清认证链接: {constructed_hd_auth_url}")
         real_url = get_real_mbn_url_from_response(constructed_hd_auth_url)
         if real_url:
             print("🎯 通过构造链接获取高清版本 (1000k)")
+            return real_url
+        
+        # 如果高清构造失败，尝试标清构造
+        print("🔄 尝试构造标清认证链接...")
+        sd_base_url = "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
+        constructed_sd_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={sd_base_url}"
+        
+        print(f"🔧 尝试构造的标清认证链接: {constructed_sd_auth_url}")
+        real_url = get_real_mbn_url_from_response(constructed_sd_auth_url)
+        if real_url:
+            print("📺 通过构造链接获取标清版本 (600k)")
             return real_url
         
         print("❌ 所有方法都失败，使用备用高清地址")
@@ -280,7 +391,7 @@ def main():
         dynamic_channels = []
         
         # 获取KBS 1TV
-        kbs1_url = get_kbs_m3u8_simple(driver, CHANNELS[0]['url'], CHANNELS[0]['name'])
+        kbs1_url = get_kbs_m3u8(driver, CHANNELS[0]['url'], CHANNELS[0]['name'])
         dynamic_channels.append({
             'name': CHANNELS[0]['name'],
             'tvg_id': CHANNELS[0]['tvg_id'],
@@ -288,14 +399,14 @@ def main():
         })
         
         # 获取KBS 2TV
-        kbs2_url = get_kbs_m3u8_simple(driver, CHANNELS[1]['url'], CHANNELS[1]['name'])
+        kbs2_url = get_kbs_m3u8(driver, CHANNELS[1]['url'], CHANNELS[1]['name'])
         dynamic_channels.append({
             'name': CHANNELS[1]['name'],
             'tvg_id': CHANNELS[1]['tvg_id'],
             'url': kbs2_url
         })
         
-        # 获取MBN
+        # 获取MBN - 使用高清优先版
         mbn_url = get_mbn_m3u8_hd(driver)
         dynamic_channels.append({
             'name': CHANNELS[2]['name'],
