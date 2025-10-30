@@ -2,13 +2,16 @@ name: Update M3U Playlist
 
 on:
   schedule:
-    # 每天UTC时间0点运行（韩国时间上午9点）
     - cron: '0 0 * * *'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
   push:
     paths:
       - 'update_playlist.py'
       - '.github/workflows/update_playlist.yml'
+
+# 🔑 添加这个权限配置部分
+permissions:
+  contents: write  # 授予写入仓库内容的权限
 
 jobs:
   update-playlist:
@@ -17,7 +20,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+      # 重要：给 checkout 动作添加 token 权限
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -33,7 +39,7 @@ jobs:
       
     - name: Run playlist update script
       env:
-        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}  # 这是您之前设置的 Gist token
       run: |
         python update_playlist.py
         
