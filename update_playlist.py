@@ -48,7 +48,22 @@ STATIC_CHANNELS = [
     'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="YTN.kr",YTN',
-    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8'
+    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="JTV TV" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Jtv_logo.svg/512px-Jtv_logo.svg.png" tvg-id="JTV.kr" group-title="Korea",JTV TV',
+    'https://61ff3340258d2.streamlock.net/jtv_live/myStream/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="CJB TV" tvg-logo="https://i.imgur.com/MvxdZhX.png" tvg-id="CJBTV.kr" group-title="Korea",CJB TV',
+    'http://1.222.207.80:1935/live/cjbtv/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="JIBS TV" tvg-logo="https://i.imgur.com/RVWpBoz.png" tvg-id="JIBSTV.kr" group-title="Korea",JIBS TV',
+    'http://123.140.197.22/stream/1/play.m3u8'
 ]
 
 def setup_driver():
