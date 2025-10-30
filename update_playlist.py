@@ -1,292 +1,357 @@
-# update_playlist.py
+#!/usr/bin/env python3
+"""
+自动抓取韩国电视台M3U8源并更新Gist
+"""
+
 import requests
-import os
 import re
 import time
 import json
+from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException
 
-# 配置信息
+# Gist配置
 GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
-GH_TOKEN = os.environ.get('GH_PAT')
-GIST_FILENAME = "korean_tv_playlist.m3u"
+GITHUB_TOKEN = "你的GitHub Token"  # 需要在GitHub Secrets中设置
 
-def check_gist_access():
-    """检查Gist访问权限"""
-    if not GH_TOKEN:
-        print("❌ 错误: 未找到 GH_PAT 环境变量")
-        return False
-    
-    headers = {
-        "Authorization": f"token {GH_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
+# 电视台配置
+CHANNELS = [
+    {
+        "name": "KBS 1TV",
+        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=11&ch_type=globalList",
+        "tvg_id": "KBS1TV.kr"
+    },
+    {
+        "name": "KBS 2TV", 
+        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=12&ch_type=globalList",
+        "tvg_id": "KBS2TV.kr"
+    },
+    {
+        "name": "MBN",
+        "url": "https://www.mbn.co.kr/vod/onair",
+        "tvg_id": "MBN.kr"
     }
+]
+
+# 静态频道列表（不需要动态抓取的）
+STATIC_CHANNELS = [
+    '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
+    '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
+    'http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)',
+    '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv',
+    'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="YTN.kr",YTN',
+    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="JTV TV" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Jtv_logo.svg/512px-Jtv_logo.svg.png" tvg-id="JTV.kr" group-title="Korea",JTV TV',
+    'https://61ff3340258d2.streamlock.net/jtv_live/myStream/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="CJB TV" tvg-logo="https://i.imgur.com/MvxdZhX.png" tvg-id="CJBTV.kr" group-title="Korea",CJB TV',
+    'http://1.222.207.80:1935/live/cjbtv/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="JIBS TV" tvg-logo="https://i.imgur.com/RVWpBoz.png" tvg-id="JIBSTV.kr" group-title="Korea",JIBS TV',
+    'http://123.140.197.22/stream/1/play.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="KBSDrama.kr",KBS Drama (480p)',
+    'http://mytv.dothome.co.kr/ch/catv/2.php',
+    '',
+    '#EXTINF:-1 tvg-id="TBSTV.kr",TBS Seoul (720p)',
+    'https://cdntv.tbs.seoul.kr/tbs/tbs_tv_web.smil/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="ABN.kr",ABN TV (720p)',
+    'https://vod2.abn.co.kr/IPHONE/abn.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="GoodTV.kr",GoodTV (1080p)',
+    'http://mobliestream.c3tv.com:1935/live/goodtv.sdp/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="KBSJoy.kr",KBS Joy (480p)',
+    'http://mytv.dothome.co.kr/ch/catv/3.php',
+    '',
+    '#EXTINF:-1 tvg-id="KBSLife.kr",KBS Life (480p)',
+    'http://mytv.dothome.co.kr/ch/catv/5.php',
+    '',
+    '#EXTINF:-1 tvg-id="KBSStory.kr",KBS Story (480p)',
+    'http://mytv.dothome.co.kr/ch/catv/4.php',
+    '',
+    '#EXTINF:-1 tvg-id="KBSWorld.kr",KBS World (720p)',
+    'https://kbsworld-ott.akamaized.net/hls/live/2002341/kbsworld/master.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="",Korean Song Channel (720p)',
+    'http://live.kytv.co.kr:8080/hls/stream.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="NHTV.kr",NHTV (720p)',
+    'http://nonghyup.flive.skcdn.com/nonghyup/_definst_/nhlive/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="OUN.kr",OUN (1080p)',
+    'https://live.knou.ac.kr/knou1/live1/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="EBS1.kr",EBS1 (1080p)',
+    'http://ebsonairios.ebs.co.kr/groundwavetablet500k/tablet500k/chunklist.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国KBC SBS综艺',
+    'http://119.200.131.11:1935/KBCTV/tv/playlist.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国KCTV',
+    'http://119.77.96.184:1935/chn21/chn21/chunklist_w252131137.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国MBC综艺频道',
+    'http://vod.mpmbc.co.kr:1935/live/encoder-tv/playlist.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国NBS农业广播',
+    'https://media.joycorp.co.kr:4443/live/live_720p/playlist.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国SBS CJB',
+    'http://1.222.207.80:1935/live/cjbtv/chunklist_w1357270949.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国TJB SBS综艺',
+    'http://1.245.74.5:1935/live/tv/.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国阿里郎WORLD',
+    'http://amdlive.ctnd.com.edgesuite.net/arirang_1ch/smil:arirang_1ch/master.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国电影2',
+    'https://epg.pw/stream/3d0b0e644d73932ced9b2a9e4c4eb3371abdf1a867bbd27267e7650c2e25fe69.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国电影3',
+    'https://epg.pw/stream/8283baa9c305ecec457631b92ee1c01f25b4d6b8cf19e284d9efbd8de0789eb5.m3u8',
+    '',
+    '#EXTINF:-1 ,韩国中央',
+    'http://119.77.96.184:1935/chn21/chn21/playlist.m3u8'
+]
+
+def setup_driver():
+    """设置Chrome驱动"""
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
     
-    try:
-        response = requests.get(f"https://api.github.com/gists/{GIST_ID}", headers=headers)
-        if response.status_code == 200:
-            gist_data = response.json()
-            print(f"✅ Gist 访问成功")
-            print(f"📝 Gist 描述: {gist_data.get('description', '无描述')}")
-            print(f"👤 所有者: {gist_data['owner']['login']}")
-            print(f"📁 文件: {list(gist_data['files'].keys())}")
-            return True
-        else:
-            print(f"❌ Gist 访问失败: {response.status_code}")
-            print(f"错误信息: {response.text}")
-            return False
-    except Exception as e:
-        print(f"❌ 检查Gist时发生错误: {e}")
-        return False
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
 
-def fetch_kbs_live_url(ch_code, channel_name):
-    """
-    从KBS官方页面抓取直播源链接
-    """
+def extract_m3u8_from_network_logs(driver, wait_time=30):
+    """从网络日志中提取m3u8链接"""
     try:
-        url = f"https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code={ch_code}&ch_type=globalList"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://onair.kbs.co.kr/',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8'
-        }
+        # 获取性能日志
+        logs = driver.get_log('performance')
+        m3u8_urls = []
         
-        print(f"🎯 尝试自动抓取 {channel_name} 直播源...")
-        response = requests.get(url, headers=headers, timeout=20)
-        response.raise_for_status()
+        for log in logs:
+            try:
+                message = json.loads(log['message'])
+                message = message.get('message', {})
+                
+                if message.get('method') == 'Network.responseReceived':
+                    url = message['params']['response']['url']
+                    if '.m3u8' in url:
+                        m3u8_urls.append(url)
+            except:
+                continue
         
-        # 多种匹配模式
-        patterns = [
-            r'https?://[^\s"\']*?\.m3u8[^\s"\']*',
-            r'file\s*:\s*["\'](https?://[^"\']*?\.m3u8[^"\']*?)["\']',
-            r'src\s*:\s*["\'](https?://[^"\']*?\.m3u8[^"\']*?)["\']',
-            r'videoUrl\s*:\s*["\'](https?://[^"\']*?\.m3u8[^"\']*?)["\']',
-        ]
+        return list(set(m3u8_urls))  # 去重
+    except:
+        return []
+
+def get_kbs_m3u8(driver, channel_url, channel_name):
+    """获取KBS的m3u8链接"""
+    try:
+        print(f"正在获取 {channel_name}...")
+        driver.get(channel_url)
         
-        found_links = []
-        for pattern in patterns:
-            matches = re.findall(pattern, response.text, re.IGNORECASE)
-            for match in matches:
-                clean_link = match.replace('\\/', '/').replace('\\u002F', '/')
-                if '.m3u8' in clean_link:
-                    found_links.append(clean_link)
+        # 等待页面加载
+        time.sleep(10)
         
-        # 去重
-        found_links = list(set(found_links))
+        # 尝试查找视频元素
+        m3u8_urls = []
         
-        # 优先选择包含频道关键词的链接
-        for link in found_links:
-            if f'kbs{ch_code}' in link.lower() or 'kbs' in link.lower():
-                print(f"✅ 成功抓取 {channel_name}: {link[:80]}...")
-                return link
+        # 方法1: 查找video标签的src
+        videos = driver.find_elements(By.TAG_NAME, 'video')
+        for video in videos:
+            src = video.get_attribute('src')
+            if src and '.m3u8' in src:
+                m3u8_urls.append(src)
         
-        # 其次选择任何M3U8链接
-        if found_links:
-            print(f"⚠️  {channel_name} 使用通用M3U8链接: {found_links[0][:80]}...")
-            return found_links[0]
+        # 方法2: 从网络请求中查找
+        network_urls = extract_m3u8_from_network_logs(driver)
+        m3u8_urls.extend(network_urls)
         
-        print(f"❌  {channel_name} 未找到M3U8链接")
+        # 方法3: 在页面源代码中查找
+        page_source = driver.page_source
+        m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
+        source_urls = re.findall(m3u8_pattern, page_source)
+        m3u8_urls.extend(source_urls)
+        
+        # 去重并返回第一个有效的m3u8链接
+        unique_urls = list(set(m3u8_urls))
+        for url in unique_urls:
+            if url and ('kbs.co.kr' in url or 'kbs.co.kr' in url):
+                print(f"找到 {channel_name} m3u8: {url}")
+                return url
+        
+        print(f"未找到 {channel_name} 的m3u8链接")
         return None
         
     except Exception as e:
-        print(f"❌ 抓取 {channel_name} 失败: {str(e)[:100]}")
+        print(f"获取 {channel_name} 时出错: {str(e)}")
         return None
 
-def fetch_mbn_live_url():
-    """
-    从MBN官方页面抓取直播源链接
-    """
+def get_mbn_m3u8(driver):
+    """获取MBN的m3u8链接"""
     try:
-        url = "https://www.mbn.co.kr/vod/onair"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://www.mbn.co.kr/',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-        }
+        print("正在获取 MBN...")
+        driver.get("https://www.mbn.co.kr/vod/onair")
         
-        print("🎯 尝试自动抓取 MBN 直播源...")
-        response = requests.get(url, headers=headers, timeout=20)
-        response.raise_for_status()
+        # 等待页面加载
+        time.sleep(10)
         
-        patterns = [
-            r'https?://[^\s"\']*?\.m3u8[^\s"\']*',
-            r'file\s*:\s*["\'](https?://[^"\']*?\.m3u8[^"\']*?)["\']',
-            r'videoUrl\s*:\s*["\'](https?://[^"\']*?\.m3u8[^"\']*?)["\']',
-        ]
+        m3u8_urls = []
         
-        found_links = []
-        for pattern in patterns:
-            matches = re.findall(pattern, response.text, re.IGNORECASE)
-            for match in matches:
-                clean_link = match.replace('\\/', '/')
-                if '.m3u8' in clean_link:
-                    found_links.append(clean_link)
+        # 查找视频元素
+        videos = driver.find_elements(By.TAG_NAME, 'video')
+        for video in videos:
+            src = video.get_attribute('src')
+            if src and '.m3u8' in src:
+                m3u8_urls.append(src)
         
-        # 去重
-        found_links = list(set(found_links))
+        # 从网络请求中查找
+        network_urls = extract_m3u8_from_network_logs(driver)
+        m3u8_urls.extend(network_urls)
         
-        # 优先选择包含mbn关键词的链接
-        for link in found_links:
-            if 'mbn' in link.lower():
-                print(f"✅ 成功抓取 MBN: {link[:80]}...")
-                return link
+        # 在页面源代码中查找
+        page_source = driver.page_source
+        m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
+        source_urls = re.findall(m3u8_pattern, page_source)
+        m3u8_urls.extend(source_urls)
         
-        if found_links:
-            print(f"⚠️  MBN 使用通用M3U8链接: {found_links[0][:80]}...")
-            return found_links[0]
+        # 去重并返回MBN的m3u8链接
+        unique_urls = list(set(m3u8_urls))
+        for url in unique_urls:
+            if url and 'mbn.co.kr' in url:
+                print(f"找到 MBN m3u8: {url}")
+                return url
         
-        print("❌ MBN 未找到M3U8链接")
+        print("未找到 MBN 的m3u8链接")
         return None
         
     except Exception as e:
-        print(f"❌ 抓取 MBN 失败: {str(e)[:100]}")
+        print(f"获取 MBN 时出错: {str(e)}")
         return None
-
-def get_fallback_links():
-    """
-    备用链接 - 当自动抓取失败时使用
-    """
-    return {
-        'kbs1': 'https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8',
-        'kbs2': 'https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8',
-        'mbn': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/chunklist.m3u8'
-    }
 
 def update_gist(content):
     """更新Gist内容"""
-    gist_url = f"https://api.github.com/gists/{GIST_ID}"
+    url = f"https://api.github.com/gists/{GIST_ID}"
     headers = {
-        "Authorization": f"token {GH_TOKEN}",
+        "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
+    
     data = {
-        "description": f"韩国电视频道自动更新列表 - 最后更新: {time.strftime('%Y-%m-%d %H:%M:%S')}",
+        "description": f"韩国电视台直播源 - 更新时间 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "files": {
-            GIST_FILENAME: {
+            "korean_tv.m3u": {
                 "content": content
             }
         }
     }
     
-    try:
-        response = requests.patch(gist_url, headers=headers, json=data)
-        if response.status_code == 200:
-            gist_data = response.json()
-            raw_url = gist_data['files'][GIST_FILENAME]['raw_url']
-            print("🎉 Gist 更新成功!")
-            print(f"🔗 原始文件地址: {raw_url}")
-            return True
-        else:
-            print(f"❌ Gist 更新失败: {response.status_code}")
-            print(f"错误详情: {response.text}")
-            return False
-    except Exception as e:
-        print(f"❌ 更新Gist时发生错误: {e}")
+    response = requests.patch(url, headers=headers, data=json.dumps(data))
+    
+    if response.status_code == 200:
+        print("Gist更新成功!")
+        return True
+    else:
+        print(f"Gist更新失败: {response.status_code} - {response.text}")
         return False
 
+def generate_playlist(dynamic_channels):
+    """生成完整的M3U播放列表"""
+    lines = ["#EXTM3U"]
+    lines.append(f"# 自动生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("")
+    
+    # 添加动态获取的频道
+    for channel in dynamic_channels:
+        if channel['url']:
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
+            lines.append(channel['url'])
+            lines.append("")
+    
+    # 添加静态频道
+    lines.extend(STATIC_CHANNELS)
+    
+    return "\n".join(lines)
+
 def main():
-    print("=" * 60)
-    print("🚀 韩国电视频道自动更新任务开始执行")
-    print("=" * 60)
+    """主函数"""
+    print("开始获取M3U8链接...")
     
-    # 0. 首先检查Gist访问权限
-    print("\n🔐 阶段零: 检查Gist访问权限")
-    if not check_gist_access():
-        print("❌ 无法访问Gist，任务终止")
-        return
+    driver = None
+    dynamic_channels = []
     
-    # 1. 尝试自动抓取最新链接
-    print("\n📡 阶段一: 自动抓取直播源")
-    kbs1_url = fetch_kbs_live_url('11', 'KBS 1TV')
-    kbs2_url = fetch_kbs_live_url('12', 'KBS 2TV')
-    mbn_url = fetch_mbn_live_url()
-    
-    # 2. 准备备用链接
-    backup_links = get_fallback_links()
-    
-    # 3. 如果抓取失败，使用备用链接
-    print("\n🛡️  阶段二: 备用方案检查")
-    if not kbs1_url:
-        print("⚠️  KBS 1TV 自动抓取失败，使用备用链接")
-        kbs1_url = backup_links['kbs1']
-    else:
-        print("✅  KBS 1TV 使用自动抓取链接")
-    
-    if not kbs2_url:
-        print("⚠️  KBS 2TV 自动抓取失败，使用备用链接")
-        kbs2_url = backup_links['kbs2']
-    else:
-        print("✅  KBS 2TV 使用自动抓取链接")
-    
-    if not mbn_url:
-        print("⚠️  MBN 自动抓取失败，使用备用链接")
-        mbn_url = backup_links['mbn']
-    else:
-        print("✅  MBN 使用自动抓取链接")
-    
-    # 4. 构建完整的M3U播放列表
-    print("\n📝 阶段三: 生成播放列表")
-    auto_status = {
-        'kbs1': '成功' if kbs1_url != backup_links['kbs1'] else '备用',
-        'kbs2': '成功' if kbs2_url != backup_links['kbs2'] else '备用', 
-        'mbn': '成功' if mbn_url != backup_links['mbn'] else '备用'
-    }
-    
-    m3u_content = f"""#EXTM3U x-tvg-url="https://raw.githubusercontent.com/linuxmuser/tv_data/master/tv_grab_kr_naver" refresh="3600"
-# 韩国电视频道列表 - 自动更新版
-# 项目地址: https://github.com/GoonhoLee/koreaiptv-auto-updater
-# 更新时间: {time.strftime('%Y-%m-%d %H:%M:%S')}
-# 自动抓取状态: KBS1({auto_status['kbs1']}) | KBS2({auto_status['kbs2']}) | MBN({auto_status['mbn']})
-# 此列表由 GitHub Actions 自动维护
-
-# 主要频道 (自动更新)
-#EXTINF:-1 tvg-id="KBS1.kr" tvg-name="KBS 1TV" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/KBS1.png" group-title="지상파",KBS 1TV
-{kbs1_url}
-
-#EXTINF:-1 tvg-id="KBS2.kr" tvg-name="KBS 2TV" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/KBS2.png" group-title="지상파",KBS 2TV
-{kbs2_url}
-
-#EXTINF:-1 tvg-id="MBN.kr" tvg-name="MBN" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/MBN.png" group-title="종합편성",MBN
-{mbn_url}
-
-# 其他韩国频道 (固定链接)
-#EXTINF:-1 tvg-id="TVChosun.kr" tvg-name="TV CHOSUN" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/TVCHOSUN.png" group-title="종합편성",TV CHOSUN
-http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8
-
-#EXTINF:-1 tvg-id="YTN.kr" tvg-name="YTN" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/YTN.png" group-title="보도",YTN
-https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
-
-#EXTINF:-1 tvg-id="EBS1.kr" tvg-name="EBS 1TV" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/EBS1.png" group-title="교육",EBS 1TV
-https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8
-
-#EXTINF:-1 tvg-id="EBS2.kr" tvg-name="EBS 2TV" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/EBS2.png" group-title="교육",EBS 2TV
-https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8
-
-#EXTINF:-1 tvg-id="KBSWorld.kr" tvg-name="KBS World" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/KBSWORLD.png" group-title="해외",KBS World
-https://kbsworld-ott.akamaized.net/hls/live/2002341/kbsworld/master.m3u8
-
-#EXTINF:-1 tvg-id="KOREA.kr" tvg-name="Korea" tvg-logo="https://raw.githubusercontent.com/linuxmuser/tv_logos/main/kr/KOREA.png" group-title="해외",Korea
-http://119.77.96.184:1935/chn21/chn21/playlist.m3u8
-
-# 说明
-#EXTINF:-1,=== 自动更新说明 ===
-https://raw.githubusercontent.com/linuxmuser/tv_logos/main/.github/update_note.png
-
-#EXTINF:-1,=== 项目地址 ===  
-https://raw.githubusercontent.com/linuxmuser/tv_logos/main/.github/github.png"""
-    
-    # 5. 更新Gist
-    print("\n📤 阶段四: 更新Gist")
-    success = update_gist(m3u_content)
-    
-    if success:
-        print("\n🎊 任务完成总结:")
-        print(f"📺 KBS 1TV: {'🟢 自动抓取' if auto_status['kbs1'] == '成功' else '🟡 备用链接'}")
-        print(f"📺 KBS 2TV: {'🟢 自动抓取' if auto_status['kbs2'] == '成功' else '🟡 备用链接'}")
-        print(f"📺 MBN: {'🟢 自动抓取' if auto_status['mbn'] == '成功' else '🟡 备用链接'}")
-        print(f"⏰ 更新时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    else:
-        print("❌ 任务失败，请检查上述错误信息")
+    try:
+        driver = setup_driver()
+        
+        # 获取KBS 1TV
+        kbs1_url = get_kbs_m3u8(driver, CHANNELS[0]['url'], CHANNELS[0]['name'])
+        dynamic_channels.append({
+            'name': CHANNELS[0]['name'],
+            'tvg_id': CHANNELS[0]['tvg_id'],
+            'url': kbs1_url
+        })
+        
+        # 获取KBS 2TV
+        kbs2_url = get_kbs_m3u8(driver, CHANNELS[1]['url'], CHANNELS[1]['name'])
+        dynamic_channels.append({
+            'name': CHANNELS[1]['name'],
+            'tvg_id': CHANNELS[1]['tvg_id'],
+            'url': kbs2_url
+        })
+        
+        # 获取MBN
+        mbn_url = get_mbn_m3u8(driver)
+        dynamic_channels.append({
+            'name': CHANNELS[2]['name'],
+            'tvg_id': CHANNELS[2]['tvg_id'],
+            'url': mbn_url
+        })
+        
+        # 生成播放列表
+        playlist_content = generate_playlist(dynamic_channels)
+        
+        # 更新Gist
+        if GITHUB_TOKEN != "你的GitHub Token":
+            update_gist(playlist_content)
+        else:
+            # 如果没有设置token，则保存到本地文件
+            with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
+                f.write(playlist_content)
+            print("播放列表已保存到 korean_tv.m3u")
+        
+        print("任务完成!")
+        
+    except Exception as e:
+        print(f"执行过程中出错: {str(e)}")
+        
+    finally:
+        if driver:
+            driver.quit()
 
 if __name__ == "__main__":
     main()
