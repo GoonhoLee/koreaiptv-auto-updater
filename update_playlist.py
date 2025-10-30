@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist
-优先获取高清版本
+修复KBS2版本
 """
 
 import requests
@@ -94,47 +94,136 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8(driver, url, channel_name):
-    """获取KBS的m3u8链接"""
+    """获取KBS的m3u8链接 - 修复KBS2版本"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
+        
+        # 清除之前的网络日志
+        driver.get_log('performance')
+        
         driver.get(url)
-        time.sleep(12)
+        
+        # 更长的等待时间，确保视频播放器完全加载
+        print("⏳ 等待KBS播放器完全加载...")
+        time.sleep(15)
         
         m3u8_urls = []
         target_domains = ['kbs.co.kr', 'gscdn.kbs.co.kr']
         
-        # 网络请求监控
+        # 方法1: 深度网络请求监控
+        print("🔍 深度监控网络请求...")
         network_urls = extract_m3u8_from_network_logs(driver, target_domains)
         m3u8_urls.extend(network_urls)
         
-        # 如果没找到，刷新重试
+        # 如果没找到，尝试刷新页面重新监控
         if not m3u8_urls:
-            print("🔄 刷新页面重新尝试...")
+            print("🔄 首次未找到，刷新页面重新尝试...")
             driver.refresh()
-            time.sleep(8)
+            time.sleep(10)
             network_urls = extract_m3u8_from_network_logs(driver, target_domains)
             m3u8_urls.extend(network_urls)
         
-        # 页面源代码搜索
+        # 方法2: 深度搜索页面源代码
+        print("🔍 深度搜索页面源代码...")
         page_source = driver.page_source
-        m3u8_pattern = r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?'
-        source_urls = re.findall(m3u8_pattern, page_source)
-        kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
-        m3u8_urls.extend(kbs_urls)
         
-        # 去重并选择
+        # 更全面的m3u8 URL匹配
+        m3u8_patterns = [
+            r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?',
+            r'["\'](https?://[^"\']*\.m3u8[^"\']*)["\']',
+            r'url\(["\']?(https?://[^"\']*\.m3u8[^"\']*)["\']?\)'
+        ]
+        
+        for pattern in m3u8_patterns:
+            source_urls = re.findall(pattern, page_source)
+            kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
+            m3u8_urls.extend(kbs_urls)
+        
+        # 方法3: 深度JavaScript分析
+        print("🔍 深度分析JavaScript...")
+        try:
+            # 执行JavaScript来获取可能的视频源
+            scripts = [
+                "Array.from(document.querySelectorAll('video')).map(v => v.src).filter(src => src && src.includes('.m3u8'))",
+                "Array.from(document.querySelectorAll('source')).map(s => s.src).filter(src => src && src.includes('.m3u8'))",
+                "Object.values(window).filter(val => typeof val === 'string' && val.includes('.m3u8') && val.includes('kbs'))",
+            ]
+            
+            for script in scripts:
+                try:
+                    result = driver.execute_script(f"return {script}")
+                    if result and isinstance(result, list):
+                        valid_urls = [url for url in result if any(domain in url for domain in target_domains)]
+                        m3u8_urls.extend(valid_urls)
+                        if valid_urls:
+                            print(f"💻 从JS执行找到: {valid_urls}")
+                except:
+                    continue
+                    
+        except Exception as e:
+            print(f"⚠️ 执行JavaScript时出错: {e}")
+        
+        # 方法4: 智能按钮点击
+        print("🔍 智能查找播放按钮...")
+        play_selectors = [
+            "button", 
+            ".btn-play", 
+            ".play-button",
+            "[onclick*='play']",
+            "[class*='play']",
+            "a[href*='javascript']"
+        ]
+        
+        for selector in play_selectors:
+            try:
+                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                for element in elements[:3]:  # 只尝试前几个
+                    try:
+                        text = element.text.lower()
+                        if any(keyword in text for keyword in ['play', '재생', '시작', '보기']):
+                            print(f"🖱️ 尝试点击播放按钮: {text}")
+                            driver.execute_script("arguments[0].click();", element)
+                            time.sleep(5)
+                            # 点击后再次监控网络
+                            new_urls = extract_m3u8_from_network_logs(driver, target_domains)
+                            m3u8_urls.extend(new_urls)
+                    except:
+                        continue
+            except Exception as e:
+                continue
+        
+        # 去重并智能选择
         unique_urls = list(set(m3u8_urls))
         
         if unique_urls:
+            print(f"📊 找到 {len(unique_urls)} 个可能的m3u8链接")
+            
+            # 智能选择最佳URL
             # 优先选择包含认证参数的URL
             auth_urls = [url for url in unique_urls if '?' in url and any(param in url for param in ['Expires=', 'Policy=', 'Signature='])]
-            selected_url = auth_urls[0] if auth_urls else unique_urls[0]
+            if auth_urls:
+                selected_url = auth_urls[0]
+                print(f"✅ 找到 {channel_name} 真实认证地址")
+            # 其次选择包含频道标识的URL
+            elif "1TV" in channel_name:
+                tv1_urls = [url for url in unique_urls if '1tv' in url.lower()]
+                selected_url = tv1_urls[0] if tv1_urls else unique_urls[0]
+            elif "2TV" in channel_name:
+                tv2_urls = [url for url in unique_urls if '2tv' in url.lower()]
+                selected_url = tv2_urls[0] if tv2_urls else unique_urls[0]
+            else:
+                selected_url = unique_urls[0]
             
-            print(f"✅ 找到 {channel_name} 真实地址")
+            print(f"🔗 最终选择: {selected_url}")
             return selected_url
         else:
-            print(f"❌ 未找到 {channel_name} 地址，使用静态地址")
-            return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8" if "1TV" in channel_name else "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+            print(f"❌ 未找到 {channel_name} 的真实m3u8地址，使用静态地址")
+            # 返回静态地址
+            if "1TV" in channel_name:
+                return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
+            elif "2TV" in channel_name:
+                return "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+            return None
             
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
