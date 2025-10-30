@@ -1,11 +1,17 @@
 #EXTM3U
-# 自动生成时间: 2025-10-30 11:55:37
+# 自动生成时间: 2025-10-30 12:17:21
 
 #EXTINF:-1 tvg-id="KBS1TV.kr",KBS 1TV
-https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod7.m3u8\
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
 
 #EXTINF:-1 tvg-id="KBS2TV.kr",KBS 2TV
-https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod7.m3u8\
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN
+https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
@@ -17,84 +23,3 @@ http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8
 
 #EXTINF:-1 tvg-id="YTN.kr",YTN
 https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
-
-#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ
-https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8
-
-#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ
-https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8
-
-#EXTINF:-1 tvg-name="JTV TV" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Jtv_logo.svg/512px-Jtv_logo.svg.png" tvg-id="JTV.kr" group-title="Korea",JTV TV
-https://61ff3340258d2.streamlock.net/jtv_live/myStream/playlist.m3u8
-
-#EXTINF:-1 tvg-name="CJB TV" tvg-logo="https://i.imgur.com/MvxdZhX.png" tvg-id="CJBTV.kr" group-title="Korea",CJB TV
-http://1.222.207.80:1935/live/cjbtv/playlist.m3u8
-
-#EXTINF:-1 tvg-name="JIBS TV" tvg-logo="https://i.imgur.com/RVWpBoz.png" tvg-id="JIBSTV.kr" group-title="Korea",JIBS TV
-http://123.140.197.22/stream/1/play.m3u8
-
-#EXTINF:-1 tvg-id="KBSDrama.kr",KBS Drama (480p)
-http://mytv.dothome.co.kr/ch/catv/2.php
-
-#EXTINF:-1 tvg-id="TBSTV.kr",TBS Seoul (720p)
-https://cdntv.tbs.seoul.kr/tbs/tbs_tv_web.smil/playlist.m3u8
-
-#EXTINF:-1 tvg-id="ABN.kr",ABN TV (720p)
-https://vod2.abn.co.kr/IPHONE/abn.m3u8
-
-#EXTINF:-1 tvg-id="GoodTV.kr",GoodTV (1080p)
-http://mobliestream.c3tv.com:1935/live/goodtv.sdp/playlist.m3u8
-
-#EXTINF:-1 tvg-id="KBSJoy.kr",KBS Joy (480p)
-http://mytv.dothome.co.kr/ch/catv/3.php
-
-#EXTINF:-1 tvg-id="KBSLife.kr",KBS Life (480p)
-http://mytv.dothome.co.kr/ch/catv/5.php
-
-#EXTINF:-1 tvg-id="KBSStory.kr",KBS Story (480p)
-http://mytv.dothome.co.kr/ch/catv/4.php
-
-#EXTINF:-1 tvg-id="KBSWorld.kr",KBS World (720p)
-https://kbsworld-ott.akamaized.net/hls/live/2002341/kbsworld/master.m3u8
-
-#EXTINF:-1 tvg-id="",Korean Song Channel (720p)
-http://live.kytv.co.kr:8080/hls/stream.m3u8
-
-#EXTINF:-1 tvg-id="NHTV.kr",NHTV (720p)
-http://nonghyup.flive.skcdn.com/nonghyup/_definst_/nhlive/playlist.m3u8
-
-#EXTINF:-1 tvg-id="OUN.kr",OUN (1080p)
-https://live.knou.ac.kr/knou1/live1/playlist.m3u8
-
-#EXTINF:-1 tvg-id="EBS1.kr",EBS1 (1080p)
-http://ebsonairios.ebs.co.kr/groundwavetablet500k/tablet500k/chunklist.m3u8
-
-#EXTINF:-1 ,韩国KBC SBS综艺
-http://119.200.131.11:1935/KBCTV/tv/playlist.m3u8
-
-#EXTINF:-1 ,韩国KCTV
-http://119.77.96.184:1935/chn21/chn21/chunklist_w252131137.m3u8
-
-#EXTINF:-1 ,韩国MBC综艺频道
-http://vod.mpmbc.co.kr:1935/live/encoder-tv/playlist.m3u8
-
-#EXTINF:-1 ,韩国NBS农业广播
-https://media.joycorp.co.kr:4443/live/live_720p/playlist.m3u8
-
-#EXTINF:-1 ,韩国SBS CJB
-http://1.222.207.80:1935/live/cjbtv/chunklist_w1357270949.m3u8
-
-#EXTINF:-1 ,韩国TJB SBS综艺
-http://1.245.74.5:1935/live/tv/.m3u8
-
-#EXTINF:-1 ,韩国阿里郎WORLD
-http://amdlive.ctnd.com.edgesuite.net/arirang_1ch/smil:arirang_1ch/master.m3u8
-
-#EXTINF:-1 ,韩国电影2
-https://epg.pw/stream/3d0b0e644d73932ced9b2a9e4c4eb3371abdf1a867bbd27267e7650c2e25fe69.m3u8
-
-#EXTINF:-1 ,韩国电影3
-https://epg.pw/stream/8283baa9c305ecec457631b92ee1c01f25b4d6b8cf19e284d9efbd8de0789eb5.m3u8
-
-#EXTINF:-1 ,韩国中央
-http://119.77.96.184:1935/chn21/chn21/playlist.m3u8
