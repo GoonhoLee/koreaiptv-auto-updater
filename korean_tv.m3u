@@ -1,11 +1,11 @@
 #EXTM3U
-# 自动生成时间: 2025-10-30 12:28:36
+# 自动生成时间: 2025-10-30 12:44:09
 
 #EXTINF:-1 tvg-id="KBS1TV.kr",KBS 1TV
-https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod8.m3u8
 
 #EXTINF:-1 tvg-id="KBS2TV.kr",KBS 2TV
-https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Expires=1762000985&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIwMDA5ODV9fX1dfQ__&Signature=EHa61srJWCODwdJxC0ZuoHAsRXNOviztAhmYRyRA~cks7lyKqtHTdrRXNE-I6Vbrs-kBm~VaNZd3eCaKbeMPjhe9SbRO5OFEPRyx4aoxcpH38YMe5i7pYuDU0uLjkqXUiNS3Hm86mnK1VYwEvu6W6eYZFGFihQ~91CAnLomxmIPu5-VAgNYIeuqiIhbR7kavmykEDdkNR5Sg6kpL7~ZrK4dCSHBB3f8SuxCI4PEzzatlzYHMA2UpaiKqsF9U5lY-J47eZJg-YaVYDSOTGsPn6LWib8WybfyQxRLIUkhu2bic0UKJ~~ZRyJS41acWdP1l1OMyACuPZU5Vpp6EgGUIwA__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN
 https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8
