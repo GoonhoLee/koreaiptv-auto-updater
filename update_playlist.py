@@ -289,44 +289,62 @@ def get_mbn_m3u8_enhanced(driver):
         
         driver.get("https://www.mbn.co.kr/vod/onair")
         
-        # 更长的等待时间
-        print("⏳ 等待MBN页面完全加载...")
-        time.sleep(20)
+        # 更长的等待时间，确保页面和播放器脚本完全加载
+        print("⏳ 等待MBN页面及播放器脚本完全加载...")
+        time.sleep(25)  # 延长等待时间
         
         m3u8_urls = []
         target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
         
-        # 方法1: 深度网络请求监控
+        # 方法1: 深度网络请求监控 (关键)
         print("🔍 深度监控MBN网络请求...")
         network_urls = extract_m3u8_from_network_logs(driver, target_domains)
         m3u8_urls.extend(network_urls)
         
         # 如果没找到，尝试滚动页面触发加载
         if not m3u8_urls:
-            print("🔄 滚动页面触发视频加载...")
+            print("🔄 首次未找到，滚动页面触发视频加载...")
             driver.execute_script("window.scrollTo(0, 500);")
-            time.sleep(5)
+            time.sleep(8)
             network_urls = extract_m3u8_from_network_logs(driver, target_domains)
             m3u8_urls.extend(network_urls)
+
+        # 如果仍未找到，尝试查找并点击播放按钮
+        if not m3u8_urls:
+            print("🔍 尝试查找并点击MBN播放按钮...")
+            play_buttons = driver.find_elements(By.XPATH, "//button[contains(., '재생') or contains(., 'Play') or contains(., '보기') or contains(., '라이브')]")
+            for button in play_buttons[:2]:
+                try:
+                    driver.execute_script("arguments[0].click();", button)
+                    print("🖱️ 点击播放按钮")
+                    time.sleep(8)
+                    new_urls = extract_m3u8_from_network_logs(driver, target_domains)
+                    m3u8_urls.extend(new_urls)
+                    break
+                except Exception as e:
+                    print(f"点击按钮失败: {e}")
+                    continue
         
-        # 方法2: 深度搜索MBN页面
-        print("🔍 深度搜索MBN页面...")
+        # 方法2: 深度搜索MBN页面源代码
+        print("🔍 深度搜索MBN页面源代码...")
         page_source = driver.page_source
         
         m3u8_patterns = [
-            r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?',
-            r'["\'](https?://[^"\']*\.m3u8[^"\']*)["\']',
-            r'streamUrl\s*:\s*["\']([^"\']+\.m3u8[^"\']*)["\']',
-            r'videoUrl\s*:\s*["\']([^"\']+\.m3u8[^"\']*)["\']'
+            r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?',  # 匹配m3u8，可能带参数
+            r'["\'](https?://[^"\']*\.m3u8[^"\']*)["\']', # 引号内的m3u8链接
+            r'streamUrl\s*:\s*["\']([^"\']+\.m3u8[^"\']*)["\']', # streamUrl: 格式
+            r'videoUrl\s*:\s*["\']([^"\']+\.m3u8[^"\']*)["\']'   # videoUrl: 格式
         ]
         
         for pattern in m3u8_patterns:
             source_urls = re.findall(pattern, page_source)
             mbn_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
             m3u8_urls.extend(mbn_urls)
+            for url in mbn_urls:
+                print(f"📄 从页面源码找到: {url}")
         
         # 方法3: MBN特定的播放器查找
-        print("🔍 查找MBN特定播放器...")
+        print("🔍 查找MBN特定播放器元素...")
         
         # MBN可能使用的播放器选择器
         player_selectors = [
@@ -337,7 +355,8 @@ def get_mbn_m3u8_enhanced(driver):
             '[id*="video"]',
             '[id*="player"]',
             '.vod-player',
-            '.mbn-player'
+            '.mbn-player',
+            '.live-player'
         ]
         
         for selector in player_selectors:
@@ -359,12 +378,14 @@ def get_mbn_m3u8_enhanced(driver):
             except Exception as e:
                 continue
         
-        # 方法4: 执行MBN特定的JavaScript
+        # 方法4: 执行MBN特定的JavaScript (关键)
         print("🔍 执行MBN特定JavaScript...")
         mbn_scripts = [
             "Array.from(document.querySelectorAll('*')).filter(el => el.innerHTML && el.innerHTML.includes('.m3u8') && el.innerHTML.includes('mbn')).map(el => el.innerHTML.match(/(https?:\\/\\/[^\\s'\"]*\\.m3u8[^\\s'\"]*)/g)).filter(m => m).flat()",
             "window.videoPlayer && window.videoPlayer.getSource && window.videoPlayer.getSource()",
-            "document.querySelector('[data-video-source]') && document.querySelector('[data-video-source]').getAttribute('data-video-source')"
+            "document.querySelector('[data-video-source]') && document.querySelector('[data-video-source]').getAttribute('data-video-source')",
+            # 新增：尝试查找包含m3u8的JavaScript变量
+            "JSON.stringify(Object.values(window).filter(val => typeof val === 'string' && val.includes('.m3u8') && val.includes('mbn')))"
         ]
         
         for script in mbn_scripts:
@@ -374,9 +395,20 @@ def get_mbn_m3u8_enhanced(driver):
                     if isinstance(result, list):
                         valid_urls = [url for url in result if any(domain in url for domain in target_domains)]
                         m3u8_urls.extend(valid_urls)
+                        if valid_urls:
+                            print(f"💻 从JS执行找到: {valid_urls}")
                     elif isinstance(result, str) and '.m3u8' in result:
-                        m3u8_urls.append(result)
-            except:
+                        # 处理可能是JSON字符串的情况
+                        if result.startswith('['):
+                            try:
+                                url_list = json.loads(result)
+                                if isinstance(url_list, list):
+                                    valid_urls = [url for url in url_list if any(domain in url for domain in target_domains)]
+                                    m3u8_urls.extend(valid_urls)
+                        else:
+                            m3u8_urls.append(result)
+            except Exception as e:
+                print(f"执行脚本 {script} 时出错: {e}")
                 continue
         
         # 去重并选择
@@ -386,11 +418,16 @@ def get_mbn_m3u8_enhanced(driver):
             print(f"📊 找到 {len(unique_urls)} 个MBN m3u8链接")
             
             # 智能选择MBN最佳URL
-            # 优先选择包含playlist的URL
-            playlist_urls = [url for url in unique_urls if 'playlist' in url]
-            if playlist_urls:
+            # 优先选择包含chunklist和认证参数的URL (根据你手动抓取的特征)
+            chunklist_auth_urls = [url for url in unique_urls if 'chunklist' in url and '?' in url and any(param in url for param in ['Policy=', 'Signature='])]
+            if chunklist_auth_urls:
+                selected_url = chunklist_auth_urls[0]
+                print("✅ 找到 MBN chunklist认证地址")
+            # 其次选择包含playlist的URL
+            elif any('playlist' in url for url in unique_urls):
+                playlist_urls = [url for url in unique_urls if 'playlist' in url]
                 selected_url = playlist_urls[0]
-            # 其次选择包含认证参数的URL
+            # 再次选择包含认证参数的URL
             elif any('?' in url and any(param in url for param in ['Policy=', 'Signature=']) for url in unique_urls):
                 auth_urls = [url for url in unique_urls if '?' in url and any(param in url for param in ['Policy=', 'Signature='])]
                 selected_url = auth_urls[0]
@@ -401,11 +438,13 @@ def get_mbn_m3u8_enhanced(driver):
             return selected_url
         else:
             print("❌ 未找到 MBN 的真实m3u8地址，使用备用地址")
-            return "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
+            # 返回你提供的备用地址
+            return "https://hls-live.mbn.co.kr/mbn-on-air/600k/chunklist.m3u8"
             
     except Exception as e:
         print(f"❌ 获取 MBN 时出错: {str(e)}")
-        return "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
+        # 返回你提供的备用地址
+        return "https://hls-live.mbn.co.kr/mbn-on-air/600k/chunklist.m3u8"
 
 def update_gist(content):
     """更新Gist内容"""
