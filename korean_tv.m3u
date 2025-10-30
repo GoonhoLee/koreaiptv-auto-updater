@@ -1,5 +1,5 @@
 #EXTM3U
-# 自动生成时间: 2025-10-30 12:17:21
+# 自动生成时间: 2025-10-30 12:28:36
 
 #EXTINF:-1 tvg-id="KBS1TV.kr",KBS 1TV
 https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
@@ -8,10 +8,7 @@ https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
 https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN
-https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8
-
-#EXTINF:-1 tvg-id="MBN.kr",MBN
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8
+https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
@@ -23,3 +20,9 @@ http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8
 
 #EXTINF:-1 tvg-id="YTN.kr",YTN
 https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
+
+#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ
+https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8
+
+#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ
+https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8
