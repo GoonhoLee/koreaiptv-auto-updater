@@ -2,9 +2,8 @@ name: Update M3U Playlist
 
 on:
   schedule:
-    # 每天UTC时间0点运行（韩国时间上午9点）
     - cron: '0 0 * * *'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
   push:
     paths:
       - 'update_playlist.py'
@@ -17,7 +16,6 @@ jobs:
   update-playlist:
     runs-on: ubuntu-latest
     
-    # 添加并发控制，防止多个工作流同时运行造成冲突
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -27,7 +25,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        # 获取完整历史记录，避免浅克隆问题
         fetch-depth: 0
         
     - name: Set up Python
@@ -49,48 +46,34 @@ jobs:
       run: |
         python update_playlist.py
         
-    - name: Configure Git
+    - name: Configure Git and commit changes
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # 配置Git用户
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # 设置默认的pull行为为rebase
-        git config pull.rebase true
         
-    - name: Check for changes
-      id: check_changes
-      run: |
-        # 添加所有更改到暂存区
-        git add -A
-        # 检查是否有更改需要提交
-        if git diff --staged --quiet; then
-          echo "has_changes=false" >> $GITHUB_OUTPUT
-          echo "No changes to commit"
-        else
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          echo "Changes detected, will commit and push"
-        fi
-        
-    - name: Pull latest changes
-      if: steps.check_changes.outputs.has_changes == 'true'
-      run: |
-        # 在提交前先拉取最新的远程更改
-        echo "Pulling latest changes from remote..."
+        # 先拉取最新的远程更改（在添加本地更改之前）
+        echo "拉取最新的远程更改..."
         git pull origin main
         
-    - name: Commit changes
-      if: steps.check_changes.outputs.has_changes == 'true'
-      run: |
-        echo "Committing changes..."
+        # 添加本地更改到暂存区
+        echo "添加本地更改..."
+        git add -A
+        
+        # 检查是否有更改需要提交
+        if git diff --staged --quiet; then
+          echo "没有需要提交的更改"
+          exit 0
+        fi
+        
+        # 提交更改
+        echo "提交更改..."
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
-    - name: Push changes
-      if: steps.check_changes.outputs.has_changes == 'true'
-      run: |
-        echo "Pushing changes to remote..."
+        # 推送更改
+        echo "推送更改到远程仓库..."
         git push origin main
-        echo "✅ Changes pushed successfully!"
         
-    - name: No changes message
-      if: steps.check_changes.outputs.has_changes == 'false'
-      run: |
-        echo "✅ No changes to commit - everything is up to date!"
+        echo "✅ 更改推送成功！"
