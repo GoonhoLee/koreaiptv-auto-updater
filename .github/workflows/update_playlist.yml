@@ -9,20 +9,25 @@ on:
       - 'update_playlist.py'
       - '.github/workflows/update_playlist.yml'
 
-# 🔑 添加这个权限配置部分
 permissions:
-  contents: write  # 授予写入仓库内容的权限
+  contents: write
 
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
     
+    # 添加并发控制，防止多个工作流同时运行
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      # 重要：给 checkout 动作添加 token 权限
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        # 获取完整历史记录
+        fetch-depth: 0
         
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -39,13 +44,30 @@ jobs:
       
     - name: Run playlist update script
       env:
-        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}  # 这是您之前设置的 Gist token
+        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
       run: |
         python update_playlist.py
         
     - name: Commit and push if changed
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add -A
-        git diff --staged --quiet || (git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M')" && git push)
+        
+        # 配置 git 以正确处理 rebase
+        git config pull.rebase true
+        
+        # 拉取最新更改并 rebase
+        git pull origin main
+        
+        # 检查是否有更改需要提交
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+        
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M')"
+        git push origin main
+        echo "Changes pushed successfully"
