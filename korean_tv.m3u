@@ -1,14 +1,14 @@
 #EXTM3U
-# 自动生成时间: 2025-10-30 12:44:09
+# 自动生成时间: 2025-10-30 13:33:20
 
 #EXTINF:-1 tvg-id="KBS1TV.kr",KBS 1TV
-https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod8.m3u8
+https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Expires=1762003727&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIwMDM3Mjd9fX1dfQ__&Signature=XE8C~n2TxM2qcO-cCKG6~oTNsYJuQs5QOT02GVOhgreKxVtNH9L7m8ttissxKcbAjNyTUGkFhy1gRNP8uVS7I56wp1YXlGjhUwL9iS43phZLPJu5Zg69bge2c3ch9ycTlTQUP~xFS4fHHxOSCQajCpGERTJZTpA-r3wspSCgTfqXVv-3swLfxC7spxZgsQssQU1M9q2WmWBWT8o53AwYeH5LiZrudoBanZIr3-SxKgqp7s~mxYwerpDTQyJR8Mfaqx9rnWYkyYYMd4osQA0ner2Tg6ifeXj7ydjE-b2zytPundiIesj7ZKG20XHp--653-pt037s4XjweG~-vHt-FA__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
 
 #EXTINF:-1 tvg-id="KBS2TV.kr",KBS 2TV
-https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Expires=1762000985&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIwMDA5ODV9fX1dfQ__&Signature=EHa61srJWCODwdJxC0ZuoHAsRXNOviztAhmYRyRA~cks7lyKqtHTdrRXNE-I6Vbrs-kBm~VaNZd3eCaKbeMPjhe9SbRO5OFEPRyx4aoxcpH38YMe5i7pYuDU0uLjkqXUiNS3Hm86mnK1VYwEvu6W6eYZFGFihQ~91CAnLomxmIPu5-VAgNYIeuqiIhbR7kavmykEDdkNR5Sg6kpL7~ZrK4dCSHBB3f8SuxCI4PEzzatlzYHMA2UpaiKqsF9U5lY-J47eZJg-YaVYDSOTGsPn6LWib8WybfyQxRLIUkhu2bic0UKJ~~ZRyJS41acWdP1l1OMyACuPZU5Vpp6EgGUIwA__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
+https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Expires=1762003821&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIwMDM4MjF9fX1dfQ__&Signature=SVHjRbv6RIhwnrz7VGpueu~o3b31rtBA~L-3OfG-nG7SOdX2PFxQfScECAOT3m9qNAzlWkOnRSZ~4NbQb3gqpunagNOrLNxmjIfvhFZUEy3PPO2HctVb3vINJ3xABEVh4NiqC~8rEaYdp-ZOluHUpzUbeG-U7kU-MMtonz5mk5-o5Ho32UvFCRgR1iYVdCK0QYrP~kbO5qobyKJZuCwBAD-glxr2kuAZlhxM3WeuAoTTf-0yrvCgrj4p6FXQADQ0Rl~jt3yoCrxr-eOBXutPBLBgNQlFBN2FFum7kzMXZmCNin4SVEoY481-W5l8NRlxTlQ6KTby4~USRgGoVVGZWA__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN
-https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8
+https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url=https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
