@@ -8,6 +8,7 @@ import re
 import time
 import json
 import os
+import urllib.parse
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -75,47 +76,108 @@ def setup_driver():
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
-def get_kbs_m3u8(driver, url, channel_name):
-    """获取KBS的m3u8链接"""
+def extract_m3u8_from_network_logs(driver, target_domains):
+    """从网络日志中提取m3u8链接"""
+    m3u8_urls = []
     try:
-        print(f"正在获取 {channel_name}...")
+        logs = driver.get_log('performance')
+        for log in logs:
+            try:
+                message = json.loads(log['message'])['message']
+                method = message.get('method')
+                
+                if method == 'Network.responseReceived':
+                    response = message['params']['response']
+                    url = response['url']
+                    
+                    # 检查是否是m3u8文件且来自目标域名
+                    if '.m3u8' in url and any(domain in url for domain in target_domains):
+                        m3u8_urls.append(url)
+                        print(f"📡 从网络请求找到: {url}")
+                        
+            except Exception as e:
+                continue
+                
+    except Exception as e:
+        print(f"⚠️ 读取网络日志时出错: {e}")
+    
+    return m3u8_urls
+
+def get_kbs_m3u8(driver, url, channel_name):
+    """获取KBS的m3u8链接 - 改进版"""
+    try:
+        print(f"🎬 正在获取 {channel_name}...")
         driver.get(url)
         
-        # 等待页面加载
-        time.sleep(12)
+        # 等待页面加载和可能的广告
+        print("⏳ 等待页面加载...")
+        time.sleep(8)
         
         m3u8_urls = []
+        target_domains = ['kbs.co.kr', 'gscdn.kbs.co.kr']
         
-        # 方法1: 在页面源代码中搜索m3u8链接
+        # 方法1: 从网络请求中捕获真实的m3u8地址
+        print("🔍 监控网络请求...")
+        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
+        
+        # 方法2: 在页面源代码中搜索包含完整参数的m3u8链接
+        print("🔍 搜索页面源代码...")
         page_source = driver.page_source
-        m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
+        
+        # 改进的正则表达式，匹配完整的m3u8 URL（包含参数）
+        m3u8_pattern = r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?'
         source_urls = re.findall(m3u8_pattern, page_source)
-        m3u8_urls.extend(source_urls)
-        
-        # 方法2: 查找video标签
-        videos = driver.find_elements(By.TAG_NAME, 'video')
-        for video in videos:
-            src = video.get_attribute('src')
-            if src and '.m3u8' in src:
-                m3u8_urls.append(src)
-        
-        # 方法3: 查找source标签
-        sources = driver.find_elements(By.TAG_NAME, 'source')
-        for source in sources:
-            src = source.get_attribute('src')
-            if src and '.m3u8' in src:
-                m3u8_urls.append(src)
         
         # 过滤出KBS相关的m3u8链接
-        valid_urls = [url for url in m3u8_urls if 'kbs.co.kr' in url]
+        kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
+        m3u8_urls.extend(kbs_urls)
         
-        if valid_urls:
-            selected_url = valid_urls[0]
-            print(f"✅ 找到 {channel_name} m3u8: {selected_url}")
+        # 方法3: 查找JavaScript变量中的m3u8链接
+        print("🔍 检查JavaScript变量...")
+        try:
+            script_elements = driver.find_elements(By.TAG_NAME, 'script')
+            for script in script_elements:
+                script_content = script.get_attribute('innerHTML')
+                if script_content:
+                    script_urls = re.findall(m3u8_pattern, script_content)
+                    kbs_script_urls = [url for url in script_urls if any(domain in url for domain in target_domains)]
+                    m3u8_urls.extend(kbs_script_urls)
+        except Exception as e:
+            print(f"⚠️ 检查JavaScript时出错: {e}")
+        
+        # 方法4: 尝试点击播放按钮（如果有）
+        try:
+            print("🔍 查找播放按钮...")
+            play_buttons = driver.find_elements(By.XPATH, "//button[contains(., '재생') or contains(., 'Play') or contains(., '시작')]")
+            for button in play_buttons[:2]:  # 只尝试前两个按钮
+                try:
+                    button.click()
+                    time.sleep(3)
+                    # 点击后再次捕获网络请求
+                    new_urls = extract_m3u8_from_network_logs(driver, target_domains)
+                    m3u8_urls.extend(new_urls)
+                except:
+                    continue
+        except Exception as e:
+            print(f"⚠️ 点击播放按钮时出错: {e}")
+        
+        # 去重并选择最佳的m3u8链接
+        unique_urls = list(set(m3u8_urls))
+        
+        if unique_urls:
+            # 优先选择包含完整参数的URL（通常是真实的直播地址）
+            param_urls = [url for url in unique_urls if '?' in url and 'Expires=' in url]
+            if param_urls:
+                selected_url = param_urls[0]
+            else:
+                selected_url = unique_urls[0]
+            
+            print(f"✅ 找到 {channel_name} 真实m3u8地址: {selected_url}")
             return selected_url
         else:
-            print(f"❌ 未找到 {channel_name} 的有效m3u8链接")
-            # 返回备用地址
+            print(f"❌ 未找到 {channel_name} 的真实m3u8地址，使用静态地址")
+            # 返回静态地址
             if "1TV" in channel_name:
                 return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
             elif "2TV" in channel_name:
@@ -127,103 +189,67 @@ def get_kbs_m3u8(driver, url, channel_name):
         return None
 
 def get_mbn_m3u8(driver):
-    """自动抓取MBN的m3u8链接"""
+    """获取MBN的m3u8链接 - 改进版"""
     try:
         print("🚀 正在获取 MBN...")
         driver.get("https://www.mbn.co.kr/vod/onair")
         
-        # 等待更长时间让MBN页面完全加载
+        # 等待页面加载
         print("⏳ 等待MBN页面加载...")
-        time.sleep(15)
+        time.sleep(12)
         
         m3u8_urls = []
+        target_domains = ['mbn.co.kr']
         
-        # 方法1: 从网络请求日志中捕获m3u8链接
-        print("🔍 分析网络请求...")
-        logs = driver.get_log('performance')
-        for log in logs:
-            try:
-                message = json.loads(log['message'])['message']
-                if message['method'] == 'Network.requestWillBeSent':
-                    request = message['params']['request']
-                    url = request['url']
-                    if '.m3u8' in url and 'mbn.co.kr' in url:
-                        m3u8_urls.append(url)
-                        print(f"📡 从网络请求找到MBN m3u8: {url}")
-            except Exception as e:
-                continue
+        # 方法1: 从网络请求中捕获真实的m3u8地址
+        print("🔍 监控网络请求...")
+        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
         
         # 方法2: 在页面源代码中搜索
         print("🔍 搜索页面源代码...")
         page_source = driver.page_source
-        m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
+        m3u8_pattern = r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?'
         source_urls = re.findall(m3u8_pattern, page_source)
-        mbn_urls = [url for url in source_urls if 'mbn.co.kr' in url]
+        mbn_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
         m3u8_urls.extend(mbn_urls)
         
-        # 方法3: 查找视频播放器相关元素
+        # 方法3: 查找视频播放器
         print("🔍 查找视频播放器...")
         video_elements = driver.find_elements(By.TAG_NAME, 'video')
         for video in video_elements:
             src = video.get_attribute('src')
             if src and '.m3u8' in src:
                 m3u8_urls.append(src)
-                print(f"🎥 从video标签找到MBN m3u8: {src}")
+                print(f"🎥 从video标签找到: {src}")
         
-        # 方法4: 查找iframe并切换到iframe内部
-        print("🔍 检查iframe...")
-        try:
-            iframes = driver.find_elements(By.TAG_NAME, 'iframe')
-            for i, iframe in enumerate(iframes):
-                try:
-                    driver.switch_to.frame(iframe)
-                    iframe_source = driver.page_source
-                    iframe_urls = re.findall(m3u8_pattern, iframe_source)
-                    mbn_iframe_urls = [url for url in iframe_urls if 'mbn.co.kr' in url]
-                    m3u8_urls.extend(mbn_iframe_urls)
-                    if mbn_iframe_urls:
-                        print(f"🖼️ 从iframe {i+1} 找到MBN m3u8")
-                    driver.switch_to.default_content()
-                except Exception as e:
-                    driver.switch_to.default_content()
-                    continue
-        except Exception as e:
-            print(f"⚠️ 检查iframe时出错: {e}")
-        
-        # 方法5: 查找JavaScript变量中的m3u8链接
-        print("🔍 检查JavaScript变量...")
-        try:
-            script_elements = driver.find_elements(By.TAG_NAME, 'script')
-            for script in script_elements:
-                script_content = script.get_attribute('innerHTML')
-                if script_content and '.m3u8' in script_content:
-                    script_urls = re.findall(m3u8_pattern, script_content)
-                    mbn_script_urls = [url for url in script_urls if 'mbn.co.kr' in url]
-                    m3u8_urls.extend(mbn_script_urls)
-        except Exception as e:
-            print(f"⚠️ 检查JavaScript时出错: {e}")
+        # 方法4: 查找source标签
+        source_elements = driver.find_elements(By.TAG_NAME, 'source')
+        for source in source_elements:
+            src = source.get_attribute('src')
+            if src and '.m3u8' in src:
+                m3u8_urls.append(src)
+                print(f"📹 从source标签找到: {src}")
         
         # 去重并选择最佳的m3u8链接
         unique_urls = list(set(m3u8_urls))
         
         if unique_urls:
-            # 优先选择包含 "playlist" 的URL，因为这是主播放列表
-            playlist_urls = [url for url in unique_urls if 'playlist' in url]
-            if playlist_urls:
-                selected_url = playlist_urls[0]
+            # 优先选择包含完整参数的URL
+            param_urls = [url for url in unique_urls if '?' in url]
+            if param_urls:
+                selected_url = param_urls[0]
             else:
                 selected_url = unique_urls[0]
             
-            print(f"✅ 找到 MBN m3u8: {selected_url}")
+            print(f"✅ 找到 MBN 真实m3u8地址: {selected_url}")
             return selected_url
         else:
-            print("❌ 未找到 MBN 的m3u8链接，使用备用地址")
-            # 返回已知的MBN备用地址
+            print("❌ 未找到 MBN 的真实m3u8地址，使用备用地址")
             return "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
             
     except Exception as e:
         print(f"❌ 获取 MBN 时出错: {str(e)}")
-        # 返回备用地址
         return "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
 
 def update_gist(content):
@@ -304,7 +330,7 @@ def main():
             'url': kbs2_url
         })
         
-        # 获取MBN - 使用自动抓取
+        # 获取MBN
         mbn_url = get_mbn_m3u8(driver)
         dynamic_channels.append({
             'name': CHANNELS[2]['name'],
