@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist
-精简优化版
+MBN完整修复版
 """
 
 import requests
@@ -94,7 +94,7 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8(driver, url, channel_name):
-    """获取KBS的m3u8链接 - 精简版"""
+    """获取KBS的m3u8链接"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         driver.get(url)
@@ -140,39 +140,56 @@ def get_kbs_m3u8(driver, url, channel_name):
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
         return None
 
-def get_real_mbn_url(auth_url):
-    """从MBN认证链接获取真实m3u8地址"""
+def get_real_mbn_url_with_browser(driver, auth_url):
+    """使用浏览器访问MBN认证链接获取真实m3u8地址"""
     try:
-        print("🔗 正在解析MBN认证链接...")
-        response = requests.get(auth_url, timeout=10)
+        print("🔗 使用浏览器访问MBN认证链接...")
         
-        if response.status_code == 200:
-            # 尝试从响应头或响应体中获取真实URL
-            final_url = response.url
+        # 清除之前的网络日志
+        driver.get_log('performance')
+        
+        # 访问认证链接
+        driver.get(auth_url)
+        time.sleep(8)  # 等待重定向完成
+        
+        # 监控重定向过程中的网络请求
+        m3u8_urls = []
+        target_domains = ['hls-live.mbn.co.kr']
+        
+        # 获取当前URL（可能是重定向后的地址）
+        current_url = driver.current_url
+        print(f"📍 当前URL: {current_url}")
+        
+        # 检查当前URL是否是真实的m3u8地址
+        if 'hls-live.mbn.co.kr' in current_url and '.m3u8' in current_url:
+            print(f"✅ 通过重定向获取到真实MBN地址: {current_url}")
+            return current_url
+        
+        # 从网络请求中查找真实的m3u8地址
+        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
+        
+        # 过滤出包含认证参数的URL
+        real_urls = [url for url in m3u8_urls if '?' in url and 'Policy=' in url and 'Signature=' in url]
+        
+        if real_urls:
+            selected_url = real_urls[0]
+            print(f"✅ 从网络请求找到真实MBN地址: {selected_url}")
+            return selected_url
+        elif m3u8_urls:
+            selected_url = m3u8_urls[0]
+            print(f"⚠️ 找到MBN地址但可能缺少参数: {selected_url}")
+            return selected_url
+        else:
+            print("❌ 未找到真实的MBN地址")
+            return None
             
-            # 如果重定向到了真实的m3u8地址
-            if 'hls-live.mbn.co.kr' in final_url and '.m3u8' in final_url:
-                print(f"✅ 获取到真实MBN地址: {final_url}")
-                return final_url
-            
-            # 或者从响应内容中提取
-            content = response.text
-            if '.m3u8' in content:
-                m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
-                urls = re.findall(m3u8_pattern, content)
-                if urls:
-                    print(f"✅ 从响应内容找到MBN地址: {urls[0]}")
-                    return urls[0]
-        
-        print("❌ 无法解析MBN认证链接")
-        return None
-        
     except Exception as e:
-        print(f"❌ 解析MBN认证链接时出错: {str(e)}")
+        print(f"❌ 使用浏览器访问MBN认证链接时出错: {str(e)}")
         return None
 
-def get_mbn_m3u8(driver):
-    """获取MBN的m3u8链接 - 优化版"""
+def get_mbn_m3u8_enhanced(driver):
+    """获取MBN的m3u8链接 - 增强版"""
     try:
         print("🚀 正在获取 MBN...")
         driver.get("https://www.mbn.co.kr/vod/onair")
@@ -190,29 +207,70 @@ def get_mbn_m3u8(driver):
         
         if auth_urls:
             print(f"🔍 找到MBN认证链接: {auth_urls[0]}")
-            # 从认证链接获取真实m3u8地址
-            real_url = get_real_mbn_url(auth_urls[0])
+            
+            # 方法1: 使用浏览器访问认证链接获取真实地址
+            real_url = get_real_mbn_url_with_browser(driver, auth_urls[0])
             if real_url:
                 return real_url
+            
+            # 方法2: 如果浏览器方法失败，尝试直接请求认证链接
+            print("🔄 尝试直接请求认证链接...")
+            try:
+                response = requests.get(auth_urls[0], timeout=10, allow_redirects=True)
+                if response.status_code == 200:
+                    final_url = response.url
+                    if 'hls-live.mbn.co.kr' in final_url and '.m3u8' in final_url:
+                        print(f"✅ 通过重定向获取到MBN地址: {final_url}")
+                        return final_url
+                    
+                    # 检查响应内容
+                    content = response.text
+                    if '.m3u8' in content:
+                        m3u8_pattern = r'https?://[^\s"\']*\.m3u8[^\s"\']*'
+                        urls = re.findall(m3u8_pattern, content)
+                        real_urls = [url for url in urls if 'hls-live.mbn.co.kr' in url and '?' in url and 'Policy=' in url]
+                        if real_urls:
+                            print(f"✅ 从响应内容找到真实MBN地址: {real_urls[0]}")
+                            return real_urls[0]
+            except Exception as e:
+                print(f"⚠️ 直接请求认证链接失败: {e}")
         
-        # 如果认证链接方法失败，尝试直接访问已知地址
-        print("🔄 尝试直接访问MBN地址...")
+        # 方法3: 尝试从页面中提取JavaScript生成的URL
+        print("🔍 尝试从页面提取MBN地址...")
         try:
-            test_urls = [
-                "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8",
-                "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
+            page_source = driver.page_source
+            # 查找包含认证参数的m3u8 URL模式
+            m3u8_patterns = [
+                r'https?://hls-live\.mbn\.co\.kr/mbn-on-air/[^"\']*\.m3u8\?[^"\']*Policy=[^"\']*',
+                r'["\'](https?://hls-live\.mbn\.co\.kr/[^"\']*\.m3u8\?[^"\']*Policy=[^"\']*)["\']'
             ]
             
-            for test_url in test_urls:
+            for pattern in m3u8_patterns:
+                urls = re.findall(pattern, page_source)
+                if urls:
+                    print(f"✅ 从页面源码找到真实MBN地址: {urls[0]}")
+                    return urls[0]
+        except Exception as e:
+            print(f"⚠️ 从页面提取失败: {e}")
+        
+        # 方法4: 执行JavaScript获取可能的URL
+        print("🔍 尝试执行JavaScript获取MBN地址...")
+        try:
+            scripts = [
+                "Array.from(document.querySelectorAll('script')).map(s => s.innerHTML).find(html => html.includes('hls-live.mbn.co.kr') && html.includes('.m3u8') && html.includes('Policy='))",
+                "window.player && window.player.getConfig && window.player.getConfig().playlist && window.player.getConfig().playlist[0] && window.player.getConfig().playlist[0].file"
+            ]
+            
+            for script in scripts:
                 try:
-                    response = requests.get(test_url, timeout=5)
-                    if response.status_code == 200:
-                        print(f"✅ 直接访问成功: {test_url}")
-                        return test_url
+                    result = driver.execute_script(f"return {script}")
+                    if result and 'hls-live.mbn.co.kr' in result and '.m3u8' in result:
+                        print(f"✅ 从JavaScript找到MBN地址: {result}")
+                        return result
                 except:
                     continue
         except Exception as e:
-            print(f"⚠️ 直接访问测试失败: {e}")
+            print(f"⚠️ 执行JavaScript失败: {e}")
         
         print("❌ 所有方法都失败，使用备用地址")
         return "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
@@ -299,8 +357,8 @@ def main():
             'url': kbs2_url
         })
         
-        # 获取MBN
-        mbn_url = get_mbn_m3u8(driver)
+        # 获取MBN - 使用增强版
+        mbn_url = get_mbn_m3u8_enhanced(driver)
         dynamic_channels.append({
             'name': CHANNELS[2]['name'],
             'tvg_id': CHANNELS[2]['tvg_id'],
