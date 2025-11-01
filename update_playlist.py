@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist
-修复KBS2版本
+修复KBS2版本，支持MBN多画质
 """
 
 import requests
@@ -262,10 +262,12 @@ def get_real_mbn_url_from_response(auth_url):
         print(f"❌ 请求MBN认证链接时出错: {str(e)}")
         return None
 
-def get_mbn_m3u8_hd(driver):
-    """获取MBN的m3u8链接 - 优先高清版本"""
+def get_mbn_m3u8_multiple_quality(driver):
+    """获取MBN的m3u8链接 - 同时获取1000k和600k版本"""
+    mbn_channels = []
+    
     try:
-        print("🚀 正在获取 MBN...")
+        print("🚀 正在获取 MBN 多画质版本...")
         driver.get("https://www.mbn.co.kr/vod/onair")
         time.sleep(15)
         
@@ -276,57 +278,105 @@ def get_mbn_m3u8_hd(driver):
         network_urls = extract_m3u8_from_network_logs(driver, target_domains)
         m3u8_urls.extend(network_urls)
         
-        # 查找所有认证代理链接，优先选择高清版本
+        # 查找所有认证代理链接
         auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
         
-        # 优先选择1000k高清版本
-        hd_auth_urls = [url for url in auth_urls if '1000k' in url]
-        sd_auth_urls = [url for url in auth_urls if '600k' in url]
+        # 分别处理1000k和600k版本
+        quality_configs = [
+            {
+                'quality': '1000k',
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'auth_urls': [url for url in auth_urls if '1000k' in url],
+                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8'
+            },
+            {
+                'quality': '600k',
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'auth_urls': [url for url in auth_urls if '600k' in url],
+                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8'
+            }
+        ]
         
-        # 尝试高清版本
-        if hd_auth_urls:
-            print(f"🔍 找到MBN高清认证链接: {hd_auth_urls[0]}")
-            real_url = get_real_mbn_url_from_response(hd_auth_urls[0])
+        for config in quality_configs:
+            print(f"\n🎯 正在获取 {config['quality']} 版本...")
+            
+            real_url = None
+            
+            # 首先尝试自动发现的认证链接
+            if config['auth_urls']:
+                print(f"🔍 找到 {config['quality']} 认证链接: {config['auth_urls'][0]}")
+                real_url = get_real_mbn_url_from_response(config['auth_urls'][0])
+                if real_url:
+                    print(f"✅ 成功获取 {config['quality']} 版本")
+                else:
+                    print(f"❌ 自动发现的 {config['quality']} 认证链接无效")
+            
+            # 如果自动发现的链接失败，尝试构造认证链接
+            if not real_url:
+                print(f"🔄 尝试构造 {config['quality']} 认证链接...")
+                constructed_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={config['base_url']}"
+                
+                print(f"🔧 尝试构造的认证链接: {constructed_auth_url}")
+                real_url = get_real_mbn_url_from_response(constructed_auth_url)
+                if real_url:
+                    print(f"✅ 通过构造链接获取 {config['quality']} 版本")
+                else:
+                    print(f"❌ 构造链接也失败，使用备用地址")
+                    real_url = config['backup_url']
+            
+            # 添加到频道列表
             if real_url:
-                print("🎯 成功获取高清版本 (1000k)")
-                return real_url
+                mbn_channels.append({
+                    'name': config['name'],
+                    'tvg_id': config['tvg_id'],
+                    'url': real_url,
+                    'quality': config['quality']
+                })
         
-        # 如果高清版本失败，尝试标清版本
-        if sd_auth_urls:
-            print(f"🔍 找到MBN标清认证链接: {sd_auth_urls[0]}")
-            real_url = get_real_mbn_url_from_response(sd_auth_urls[0])
-            if real_url:
-                print("📺 使用标清版本 (600k)")
-                return real_url
-        
-        # 如果自动发现的链接都失败，尝试直接构造高清认证链接
-        print("🔄 尝试构造高清认证链接...")
-        hd_base_url = "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
-        constructed_hd_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={hd_base_url}"
-        
-        print(f"🔧 尝试构造的高清认证链接: {constructed_hd_auth_url}")
-        real_url = get_real_mbn_url_from_response(constructed_hd_auth_url)
-        if real_url:
-            print("🎯 通过构造链接获取高清版本 (1000k)")
-            return real_url
-        
-        # 如果高清构造失败，尝试标清构造
-        print("🔄 尝试构造标清认证链接...")
-        sd_base_url = "https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8"
-        constructed_sd_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={sd_base_url}"
-        
-        print(f"🔧 尝试构造的标清认证链接: {constructed_sd_auth_url}")
-        real_url = get_real_mbn_url_from_response(constructed_sd_auth_url)
-        if real_url:
-            print("📺 通过构造链接获取标清版本 (600k)")
-            return real_url
-        
-        print("❌ 所有方法都失败，使用备用高清地址")
-        return "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
+        # 如果两个版本都获取成功
+        if len(mbn_channels) == 2:
+            print("🎉 成功获取MBN双画质版本！")
+        elif len(mbn_channels) == 1:
+            print(f"⚠️ 只成功获取 {mbn_channels[0]['quality']} 版本")
+        else:
+            print("❌ 未能获取任何MBN版本，使用备用地址")
+            # 添加备用地址
+            mbn_channels.append({
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'quality': '1000k'
+            })
+            mbn_channels.append({
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'quality': '600k'
+            })
+            
+        return mbn_channels
             
     except Exception as e:
-        print(f"❌ 获取 MBN 时出错: {str(e)}")
-        return "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
+        print(f"❌ 获取 MBN 多画质版本时出错: {str(e)}")
+        # 返回备用地址
+        return [
+            {
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'quality': '1000k'
+            },
+            {
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'quality': '600k'
+            }
+        ]
 
 def update_gist(content):
     """更新Gist内容"""
@@ -406,13 +456,9 @@ def main():
             'url': kbs2_url
         })
         
-        # 获取MBN - 使用高清优先版
-        mbn_url = get_mbn_m3u8_hd(driver)
-        dynamic_channels.append({
-            'name': CHANNELS[2]['name'],
-            'tvg_id': CHANNELS[2]['tvg_id'],
-            'url': mbn_url
-        })
+        # 获取MBN - 多画质版本
+        mbn_channels = get_mbn_m3u8_multiple_quality(driver)
+        dynamic_channels.extend(mbn_channels)
         
         # 生成播放列表
         playlist_content = generate_playlist(dynamic_channels)
@@ -429,6 +475,11 @@ def main():
         # 打印统计
         successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
         print(f"📊 成功获取 {len(successful_channels)}/{len(dynamic_channels)} 个频道")
+        
+        # 显示MBN版本信息
+        mbn_versions = [ch for ch in dynamic_channels if 'MBN' in ch['name']]
+        for mbn in mbn_versions:
+            print(f"📺 {mbn['name']}: {mbn['url']}")
         
     except Exception as e:
         print(f"❌ 执行过程中出错: {str(e)}")
