@@ -14,11 +14,13 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-# 配置信息 - 🚨请修改下面的信息！
-GITHUB_USERNAME = "GoonhoLee"  # 替换为您的GitHub用户名
-STABLE_REPO_NAME = "korean-iptv-stable"  # 替换为您创建的固定仓库名
+# 配置信息
+GITHUB_USERNAME = "GoonhoLee"
+STABLE_REPO_NAME = "korean-tv-static"
 GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
-GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+# 使用新的token
+FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
+GITHUB_TOKEN = FULL_ACCESS_TOKEN  # 兼容原有代码
 
 # 电视台配置
 CHANNELS = [
