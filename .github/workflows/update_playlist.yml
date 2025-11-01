@@ -24,7 +24,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.FULL_ACCESS_TOKEN }}
         fetch-depth: 0
         
     - name: Set up Python
@@ -42,21 +42,17 @@ jobs:
       
     - name: Run playlist update script
       env:
-        GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
+        FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
         python update_playlist.py
         
     - name: Configure Git and push changes
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
         # 配置Git用户
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
-        # 强制更新到最新版本，忽略本地更改
-        git fetch origin
-        git reset --hard origin/main
         
         # 添加所有更改
         git add -A
