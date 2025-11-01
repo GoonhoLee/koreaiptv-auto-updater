@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-自动抓取韩国电视台M3U8源并更新Gist
+自动抓取韩国电视台M3U8源并更新Gist和固定仓库
 修复KBS2版本，支持MBN多画质
 """
 
@@ -14,7 +14,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-# Gist配置
+# 配置信息 - 🚨请修改下面的信息！
+GITHUB_USERNAME = "GoonhoLee"  # 替换为您的GitHub用户名
+STABLE_REPO_NAME = "korean-iptv-stable"  # 替换为您创建的固定仓库名
 GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 
@@ -413,6 +415,60 @@ def update_gist(content):
         print(f"❌ 更新Gist时出错: {str(e)}")
         return False
 
+def update_stable_repository(content):
+    """更新固定仓库的M3U文件"""
+    if not GITHUB_TOKEN:
+        print("❌ 未找到GITHUB_TOKEN，跳过固定仓库更新")
+        return False
+        
+    # 获取文件当前SHA（需要这个来更新文件）
+    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv.m3u"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    try:
+        # 首先尝试获取文件当前信息
+        response = requests.get(url, headers=headers)
+        sha = None
+        if response.status_code == 200:
+            sha = response.json().get('sha')
+            print("📁 找到现有文件，准备更新...")
+        else:
+            print("📁 未找到现有文件，将创建新文件...")
+        
+        # 更新或创建文件
+        data = {
+            "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "content": content.encode('utf-8').decode('latin-1'),  # Base64编码
+            "committer": {
+                "name": "GitHub Action",
+                "email": "action@github.com"
+            }
+        }
+        
+        if sha:
+            data["sha"] = sha
+        
+        response = requests.put(url, headers=headers, json=data)
+        
+        if response.status_code in [200, 201]:
+            print("🎉 固定仓库更新成功!")
+            
+            # 打印静态URL
+            static_url = f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/main/korean_tv.m3u"
+            print(f"🔗 您的静态URL是: {static_url}")
+            print("💡 请在Kodi中使用这个URL，它将自动更新!")
+            return True
+        else:
+            print(f"❌ 固定仓库更新失败: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ 更新固定仓库时出错: {str(e)}")
+        return False
+
 def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
     lines = ["#EXTM3U"]
@@ -466,6 +522,9 @@ def main():
         
         # 更新Gist
         update_gist(playlist_content)
+        
+        # 🆕 新增：更新固定仓库
+        update_stable_repository(playlist_content)
         
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
