@@ -52,8 +52,15 @@ STATIC_CHANNELS = [
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv',
     'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
     '',
-    '#EXTINF:-1 tvg-id="YTN.kr",YTN',
-    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8'
+   '#EXTINF:-1 tvg-id="YTN.kr",YTN',
+    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
+    '',
+    # 🆕 新增EBS频道
+    '#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ',
+    'https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8'
 ]
 
 def setup_driver():
