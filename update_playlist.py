@@ -9,6 +9,7 @@ import re
 import time
 import json
 import os
+import base64  # 🆕 添加这一行
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -440,10 +441,15 @@ def update_stable_repository(content):
         else:
             print("📁 未找到现有文件，将创建新文件...")
         
+        # 正确的Base64编码
+        import base64
+        content_bytes = content.encode('utf-8')
+        content_base64 = base64.b64encode(content_bytes).decode('ascii')
+        
         # 更新或创建文件
         data = {
             "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "content": content.encode('utf-8').decode('latin-1'),  # Base64编码
+            "content": content_base64,  # 使用正确的Base64编码
             "committer": {
                 "name": "GitHub Action",
                 "email": "action@github.com"
@@ -470,7 +476,6 @@ def update_stable_repository(content):
     except Exception as e:
         print(f"❌ 更新固定仓库时出错: {str(e)}")
         return False
-
 def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
     lines = ["#EXTM3U"]
