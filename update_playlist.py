@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist和固定仓库
-优化版本：简化逻辑，添加MBC频道
+修复版：优化KBS和MBC的直播源获取
 """
 
 import requests
@@ -50,8 +50,17 @@ CHANNELS = [
     }
 ]
 
-# 静态频道列表
+# 静态频道列表（包含可靠的直播源）
 STATIC_CHANNELS = [
+    '#EXTINF:-1 tvg-id="KBS1TV.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/KBS_1TV_2016_logo.svg/512px-KBS_1TV_2016_logo.svg.png" group-title="Korea",KBS 1TV (直播)',
+    'https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="KBS2TV.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/KBS_2TV_2016_logo.svg/512px-KBS_2TV_2016_logo.svg.png" group-title="Korea",KBS 2TV (直播)',
+    'https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="MBC.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/MBC_%EB%AC%B8%ED%99%94%EB%B0%A9%EC%86%A1.svg/512px-MBC_%EB%AC%B8%ED%99%94%EB%B0%A9%EC%86%A1.svg.png" group-title="Korea",MBC (直播)',
+    'https://mvod.imbc.com/onair/1tv/onair.m3u8',
+    '',
     '#EXTINF:-1 tvg-id="TVChosun.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/ko/thumb/6/6a/TV_Chosun.svg/512px-TV_Chosun.svg.png" group-title="Korea",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
     'http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8',
@@ -78,14 +87,14 @@ def setup_driver():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
-def extract_m3u8_from_logs(driver, target_domains):
+def extract_m3u8_from_logs(driver, target_domains, required_keywords=None):
     """从网络日志中提取m3u8链接"""
     m3u8_urls = []
     try:
@@ -101,7 +110,13 @@ def extract_m3u8_from_logs(driver, target_domains):
                     
                     urls = [request.get('url', ''), response.get('url', '')]
                     for url in urls:
-                        if url and '.m3u8' in url and any(domain in url for domain in target_domains):
+                        if url and '.m3u8' in url:
+                            # 域名过滤
+                            if target_domains and not any(domain in url for domain in target_domains):
+                                continue
+                            # 关键词过滤
+                            if required_keywords and not any(keyword in url.lower() for keyword in required_keywords):
+                                continue
                             m3u8_urls.append(url)
             except Exception:
                 continue
@@ -111,19 +126,27 @@ def extract_m3u8_from_logs(driver, target_domains):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8(driver, url, channel_name):
-    """获取KBS的m3u8链接"""
+    """获取KBS的直播m3u8链接"""
     try:
-        print(f"🎬 正在获取 {channel_name}...")
+        print(f"🎬 正在获取 {channel_name} 直播源...")
         
         driver.get(url)
-        time.sleep(12)  # 减少等待时间
+        time.sleep(15)  # 增加等待时间确保直播播放器加载
         
         target_domains = ['kbs.co.kr', 'gscdn.kbs.co.kr']
+        required_keywords = ['1tv', '2tv', 'live']  # 直播相关关键词
+        
         m3u8_urls = []
         
-        # 网络请求监控
-        network_urls = extract_m3u8_from_logs(driver, target_domains)
+        # 网络请求监控 - 重点查找直播源
+        network_urls = extract_m3u8_from_logs(driver, target_domains, required_keywords)
         m3u8_urls.extend(network_urls)
+        
+        # 如果没找到直播源，放宽条件再找一次
+        if not m3u8_urls:
+            print("🔍 未找到直播源，放宽条件重新搜索...")
+            network_urls = extract_m3u8_from_logs(driver, target_domains, None)
+            m3u8_urls.extend(network_urls)
         
         # 页面源代码搜索
         page_source = driver.page_source
@@ -131,21 +154,30 @@ def get_kbs_m3u8(driver, url, channel_name):
         kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
         m3u8_urls.extend(kbs_urls)
         
-        # 智能选择URL
+        # 智能选择直播URL
         unique_urls = list(set(m3u8_urls))
         
         if unique_urls:
-            # 优先选择包含认证参数的URL
-            auth_urls = [url for url in unique_urls if any(param in url for param in ['Expires=', 'Policy=', 'Signature='])]
-            if auth_urls:
-                selected_url = auth_urls[0]
+            # 优先选择直播URL（包含1tv/2tv/live）
+            live_urls = [url for url in unique_urls if any(keyword in url.lower() for keyword in required_keywords)]
+            if live_urls:
+                selected_url = live_urls[0]
+                print(f"✅ 找到 {channel_name} 直播源: {selected_url[:80]}...")
+                return selected_url
             else:
-                selected_url = unique_urls[0]
-            
-            print(f"✅ 找到 {channel_name}: {selected_url[:80]}...")
-            return selected_url
+                # 其次选择带认证参数的URL
+                auth_urls = [url for url in unique_urls if any(param in url for param in ['Expires=', 'Policy=', 'Signature='])]
+                if auth_urls:
+                    selected_url = auth_urls[0]
+                    print(f"✅ 找到 {channel_name} 认证源: {selected_url[:80]}...")
+                    return selected_url
+                else:
+                    selected_url = unique_urls[0]
+                    print(f"⚠️ 找到 {channel_name} 源（可能非直播）: {selected_url[:80]}...")
+                    return selected_url
         else:
-            # 返回静态备用地址
+            print(f"❌ 未找到 {channel_name} 直播源，使用静态直播地址")
+            # 返回可靠的静态直播地址
             if "1TV" in channel_name:
                 return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
             else:
@@ -153,21 +185,55 @@ def get_kbs_m3u8(driver, url, channel_name):
                 
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
+        # 返回可靠的备用直播地址
         return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8" if "1TV" in channel_name else "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
 
 def get_mbc_m3u8(driver):
-    """获取MBC的m3u8链接"""
+    """获取MBC的直播m3u8链接"""
     try:
-        print("🎬 正在获取 MBC...")
+        print("🎬 正在获取 MBC 直播源...")
         driver.get("https://onair.imbc.com/")
-        time.sleep(10)
+        time.sleep(15)  # 增加等待时间
         
         target_domains = ['imbc.com', 'mvod.imbc.com']
+        required_keywords = ['onair', 'live', '1tv', 'broadcast']
+        
         m3u8_urls = []
         
-        # 网络请求监控
-        network_urls = extract_m3u8_from_logs(driver, target_domains)
+        # 深度网络监控
+        print("🔍 深度监控MBC网络请求...")
+        network_urls = extract_m3u8_from_logs(driver, target_domains, required_keywords)
         m3u8_urls.extend(network_urls)
+        
+        # 如果没找到，尝试点击可能的播放按钮
+        if not m3u8_urls:
+            print("🖱️ 尝试查找并点击播放按钮...")
+            play_selectors = [
+                "button[class*='play']",
+                "a[class*='play']", 
+                ".btn-play",
+                ".play-button",
+                "button:contains('재생')",
+                "a:contains('재생')"
+            ]
+            
+            for selector in play_selectors:
+                try:
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector.replace(":contains", ""))
+                    for element in elements[:2]:
+                        try:
+                            if any(keyword in element.text.lower() for keyword in ['재생', 'play', '시청']):
+                                print(f"🖱️ 点击播放按钮: {element.text}")
+                                driver.execute_script("arguments[0].click();", element)
+                                time.sleep(8)
+                                # 点击后再次监控网络
+                                new_urls = extract_m3u8_from_logs(driver, target_domains, required_keywords)
+                                m3u8_urls.extend(new_urls)
+                                break
+                        except:
+                            continue
+                except:
+                    continue
         
         # 页面源代码搜索
         page_source = driver.page_source
@@ -175,19 +241,22 @@ def get_mbc_m3u8(driver):
         mbc_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
         m3u8_urls.extend(mbc_urls)
         
-        # 查找直播相关的URL
-        live_urls = [url for url in m3u8_urls if any(keyword in url.lower() for keyword in ['live', 'onair', 'broadcast'])]
+        # 智能选择直播URL
+        unique_urls = list(set(m3u8_urls))
         
-        if live_urls:
-            selected_url = live_urls[0]
-            print(f"✅ 找到 MBC: {selected_url[:80]}...")
-            return selected_url
-        elif m3u8_urls:
-            selected_url = m3u8_urls[0]
-            print(f"✅ 找到 MBC (备选): {selected_url[:80]}...")
-            return selected_url
+        if unique_urls:
+            # 优先选择直播URL
+            live_urls = [url for url in unique_urls if any(keyword in url.lower() for keyword in required_keywords)]
+            if live_urls:
+                selected_url = live_urls[0]
+                print(f"✅ 找到 MBC 直播源: {selected_url[:80]}...")
+                return selected_url
+            else:
+                selected_url = unique_urls[0]
+                print(f"⚠️ 找到 MBC 源（可能非直播）: {selected_url[:80]}...")
+                return selected_url
         else:
-            print("❌ 未找到MBC直播源，使用备用地址")
+            print("❌ 未找到MBC直播源，使用静态直播地址")
             return "https://mvod.imbc.com/onair/1tv/onair.m3u8"
             
     except Exception as e:
@@ -262,7 +331,6 @@ def get_mbn_m3u8(driver):
             
     except Exception as e:
         print(f"❌ 获取 MBN 时出错: {str(e)}")
-        # 返回备用地址
         return [
             {
                 'name': 'MBN（高画质）',
@@ -324,11 +392,9 @@ def update_stable_repository(content):
     }
     
     try:
-        # 获取文件当前SHA
         response = requests.get(url, headers=headers)
         sha = response.json().get('sha') if response.status_code == 200 else None
         
-        # Base64编码
         content_bytes = content.encode('utf-8')
         content_base64 = base64.b64encode(content_bytes).decode('ascii')
         
@@ -363,6 +429,7 @@ def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
     lines = ["#EXTM3U"]
     lines.append(f"# 自动生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("# 频道来源: KBS, MBC, MBN, TVChosun, YTN, EBS")
     lines.append("")
     
     # 添加动态获取的频道
@@ -372,14 +439,15 @@ def generate_playlist(dynamic_channels):
             lines.append(channel['url'])
             lines.append("")
     
-    # 添加静态频道
+    # 添加静态频道（确保直播源）
     lines.extend(STATIC_CHANNELS)
     
     return "\n".join(lines)
 
 def main():
     """主函数"""
-    print("🎬 开始获取韩国电视台M3U8链接...")
+    print("🎬 开始获取韩国电视台直播源...")
+    print("📡 目标频道: KBS 1TV, KBS 2TV, MBC, MBN")
     
     driver = None
     try:
@@ -423,6 +491,12 @@ def main():
         # 打印统计信息
         successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
         print(f"📊 成功获取 {len(successful_channels)} 个频道")
+        
+        # 显示频道详情
+        print("\n📺 频道详情:")
+        for channel in dynamic_channels:
+            status = "✅" if channel.get('url') else "❌"
+            print(f"  {status} {channel['name']}")
         
     except Exception as e:
         print(f"❌ 执行过程中出错: {str(e)}")
