@@ -1,34 +1,34 @@
 #EXTM3U
-# 自动生成时间: 2025-11-01 20:57:44
+# 自动生成时间: 2025-11-02 00:11:27
 
-#EXTINF:-1 tvg-id="KBS1TV.kr",KBS 1TV
-https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Expires=1762203322&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIyMDMzMjJ9fX1dfQ__&Signature=NiSS0I6Ex7wnrjuQXOLwwN5moTgY-gJueFyroNxIyxhAa~AWTjjHb1E3aT1mhCfJMV-ewIMgmF5QBu5yJe3b-7Ia1qHmRUP~iiK2Jn1yqL0AG6Yd2Rr9dnfYQustflve1XQ5ezGIQHRduum8YKcyPSksV118FXXT1WeiN8N~MqeS2dg8wKTSxvoCd0W-p0UuQ~BMhyOf9cCV0kOk6Bs4bCCo~PxBqt7i1ITsuHORtvwjaUuaz62epvnp44jTXbIWzSKm8Is1Nuh~2RVKfwwQhHtNvy28JdnboPFjOfJiWpuzfL8~5u9n3tYSRTdeh7WD1Dx9bzuEgLpHbK9e0v5zvg__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
+#EXTINF:-1 tvg-id="KBS1TV.kr" tvg-logo="" group-title="Korea",KBS 1TV
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod4.m3u8\
 
-#EXTINF:-1 tvg-id="KBS2TV.kr",KBS 2TV
-https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Expires=1762203397&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIyMDMzOTd9fX1dfQ__&Signature=mCKUFPeWUaN-vNgrOqKl10jjSRUwth7udE9nX17KcIEXruL8we0O1JIctpUXBZ~javYLD0kHglfPP0~2AzMZGyD-EYAJu3VGsQwgkKG1LTGOV8krcezmcqvB-mNeQ0VeuQb49fUSDNeDlnrjgWRef-if0KpPopd1kL0t4Ygt~P2nHDumg~nuIK3ECDr2TC2HY~ZGCnOdTx5pbCB-ZKwC5EtlLufEJgxCaxCSbG68ciGLpjfhvUE9RfqXtZfgdQlaDZJa2OKD4HGK~AHeM56no2olWHUsRSopOPTz92HYIUe6EyZTlrVWDNZe5zkJZKm6yAwZOHDr26Wa2f4v2FRKVg__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
+#EXTINF:-1 tvg-id="KBS2TV.kr" tvg-logo="" group-title="Korea",KBS 2TV
+https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Expires=1762215014&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjIyMTUwMTR9fX1dfQ__&Signature=D5SL3~YZMuQoKah87QS7J1bUjlge38VOIYzOn26lJLLMr9eIPSawN68-fq2CH0qrxAGciRzFoyvkSIVftt-0322H6WVQrJB7TtPhntfqL0j3~M7SfPk1aChj76yJn9~NRI7ZLM1Y2ZUf8LRx8xGUwe~AnL~dlJA0NRjBC~eLW2p7ejnF-mgHZRd2IZ4-etF4-EtvT3r7DrNg3xLnFzqcW11n6CITw1fWXoS5EMo6rnpuarwmllGkZDsvBMUNFladhqZy0hFiJNDNesh~SvZARW82t3fLenUlffIfIeZ3aePr9XwEwqTtBHOn6N-nGoj2WfnkMCEiS6bLW~WEpE4-Hg__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
 
-#EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjExNzA2M30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=LSIbEAjCvwnbiEIP62naabHcbWnzvdHJAhnzO5Ion9XukHNC1K6jlBxyLn-8jnlYgxnI3juIglFQ8-VYhwKabGb2eW4zhYA7eAbQoC6GfqF69RbSxd9NyKMtEPWBDBSELoNPeumbF15uOwDZ1QNH4Dtko53bVhyLRFxzvVDt7tU_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+#EXTINF:-1 tvg-id="MBN.kr" tvg-logo="" group-title="Korea",MBN（高画质）
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjEyODY2Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=p~TYowZZNhgbkbSz~f7D0znIBmKelFHLVEbFcIxQqDO62iSFIgMKBCIOFKmlGsb07ikbQgzGhIG0MjOogcKoUvGma~N00nscshERzMg2h~SdlFMb0vdeQqOJkx79ZZ0VsNxzPbsSbJ5OWhZ7v1pOzUcx9-d2hrwzUzdfPIsno8Q_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
-#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjExNzA2NH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=q6RwpIuaeNOER2OCDwELjj5IWyw8JdBsRNsPbfuPQ8Au7r4VaZYmnDmkGxcyjvNjqr21udUS-l9WhV0ySbEr91hlSP~cs93tc732MjLP4wDY2lX31ycPrUajLRNe6sVzJRCVjN5WqAit4wWrL7EEb0LmyT-Ays5kLBGpwo4qyuE_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+#EXTINF:-1 tvg-id="MBN.kr" tvg-logo="" group-title="Korea",MBN（标清）
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjEyODY2OH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=KQb6QvjfaCPw4KjL5N1TnMG484HDWAmrvpu3rvfjKJHC8RhsDP4d5ROw6jtXNqp7Bshlw3WTLra4yfhkZQeVxZQvgO5CgEEvtcRd9MFcZ9haQqkn8QTwA1fKLvAL4tVYBAfi-0MA2fyUqjDjUqFZZSQWxsZXdnlXwgfa3BL8hHg_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
-#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
+#EXTINF:-1 tvg-id="MBC.kr" tvg-logo="" group-title="Korea",MBC
+https://mvod.imbc.com/onair/1tv/onair.m3u8
+
+#EXTINF:-1 tvg-id="TVChosun.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/ko/thumb/6/6a/TV_Chosun.svg/512px-TV_Chosun.svg.png" group-title="Korea",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
 http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8
 
-#EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)
+#EXTINF:-1 tvg-id="TVChosun2.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/ko/thumb/6/6a/TV_Chosun.svg/512px-TV_Chosun.svg.png" group-title="Korea",TV Chosun 2 (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv
 http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8
 
-#EXTINF:-1 tvg-id="YTN.kr",YTN
+#EXTINF:-1 tvg-id="YTN.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/YTN_logo.svg/512px-YTN_logo.svg.png" group-title="Korea",YTN
 https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
 
-#EXTINF:-1 tvg-name="EBS 1 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" tvg-id="EBS1TV.kr" group-title="Korea",EBS 1 Ⓢ
+#EXTINF:-1 tvg-id="EBS1TV.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_1TV_Logo.svg/512px-EBS_1TV_Logo.svg.png" group-title="Korea",EBS 1 Ⓢ
 https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8
 
-#EXTINF:-1 tvg-name="EBS 2 Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" tvg-id="EBS2TV.kr" group-title="Korea",EBS 2 Ⓢ
+#EXTINF:-1 tvg-id="EBS2TV.kr" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/EBS_2TV_Logo.svg/512px-EBS_2TV_Logo.svg.png" group-title="Korea",EBS 2 Ⓢ
 https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8
-
-#EXTINF:-1 tvg-name="SBS TV" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/SBS_Korea_Logo_%28Word_Only%29.svg/512px-SBS_Korea_Logo_%28Word_Only%29.svg.png" tvg-id="SBSTV.kr" group-title="Korea",SBS TV
-https://github.com/Free-TV/IPTV/blob/master/playlist.m3u8
