@@ -123,14 +123,14 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     
     return list(set(m3u8_urls))
 
-def generate_kbs_auth_url(base_url, expires_time=1762427233):
+def generate_kbs_auth_url(base_url, channel_name, expires_time=1762427233):
     """生成KBS认证m3u8 URL"""
     try:
-        # 从基础URL提取信息
-        if "1tv" in base_url:
+        # 根据频道名称和基础URL确定使用哪个认证参数
+        if "KBS1" in channel_name or "1tv" in base_url:
             policy = "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjcyMzN9fX1dfQ__"
             signature = "GBVxDBAnqoytflq9N1p5-qB0B8rGgiEpIjbXpi-Qc-L0g6MpVM13iQxNYC1v6aaDFJdFV2uAr9NC47IEMUibPkiBWSmhbcbxkN2SZOb0O6A9Cx0klgGw6GjdYcGq5pi3f3lqF-j4~VMKvlnFhLCWWWHvX~1sOwXlE4s7q-Wnt0u7H7LpaTI2cKPE~Vu7icLPd9Ayo9o2NZASPSkcx-uJN4WkWqip5kM8O093H5SNUPeqIw8b4yo7G8Yq2HpyW-vIwypyIlqdUUPSCrKsiyeqg2kh0hCJ2SZLXstGVRM8p4duw~mCXsJ1rVeD1CGFwulXa~~flfTvbx43MzF-4aT~bw__"
-        elif "2tv" in base_url:
+        elif "KBS2" in channel_name or "2tv" in base_url:
             policy = "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjcyNzZ9fX1dfQ__"
             signature = "DgbgcW5Haz-YVw5bqq47O4HiEJvTBfwRUfkGetKgES3uhz506oZXUta9Kqg6qLy76ebdCm3gCYeMD9VoELebw~VceIckPB63j-Tty717Apj-M34J5KiebJCh1JkNiR04tY3YH48R~-AMT28a4Gx-GxfHVCIgcoWlqKL80-gIbevOWHpUCHZyqDnXs3omLSYai7lcV0MrQ3hG9bbG1jQyzkoMdv4lwMbeaBUcCuBLiUUjVcgR71-fQf8pGeNLlvUo0sskdATdAGp8t~tgxycTEBAelQEv2lCKLb341vc6cvh9QIEELGX4wR5pxSSQL~TkERoxj~DB5ExxWMM2shXfWw__"
         else:
@@ -262,7 +262,7 @@ def get_kbs_m3u8(driver, url, channel_name):
                 # 如果是KBS1或KBS2但没有认证参数，手动生成认证URL
                 if "KBS1" in channel_name or "KBS2" in channel_name:
                     base_url = selected_url.split('?')[0]  # 获取基础URL
-                    selected_url = generate_kbs_auth_url(base_url)
+                    selected_url = generate_kbs_auth_url(base_url, channel_name)  # 传入channel_name
                     print(f"✅ 为 {channel_name} 生成认证地址")
             
             print(f"🔗 最终选择: {selected_url}")
@@ -272,10 +272,10 @@ def get_kbs_m3u8(driver, url, channel_name):
             # 返回静态地址
             if "KBS1" in channel_name:
                 base_url = "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
-                return generate_kbs_auth_url(base_url)
+                return generate_kbs_auth_url(base_url, channel_name)  # 传入channel_name
             elif "KBS2" in channel_name:
                 base_url = "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
-                return generate_kbs_auth_url(base_url)
+                return generate_kbs_auth_url(base_url, channel_name)  # 传入channel_name
             elif "24" in channel_name:
                 return "https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8"
             elif "DRAMA" in channel_name:
