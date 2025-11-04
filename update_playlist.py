@@ -9,7 +9,7 @@ import re
 import time
 import json
 import os
-import base64  # 🆕 添加这一行
+import base64
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,28 +19,32 @@ from selenium.webdriver.chrome.options import Options
 GITHUB_USERNAME = "GoonhoLee"
 STABLE_REPO_NAME = "korean-tv-static"
 GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
-# 使用新的token
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
-GITHUB_TOKEN = FULL_ACCESS_TOKEN  # 兼容原有代码
+GITHUB_TOKEN = FULL_ACCESS_TOKEN
 
-# 电视台配置 - 添加新的KBS频道
+# 电视台配置 - 调整顺序，删除指定频道
 CHANNELS = [
     {
-        "name": "KBS 1TV",
+        "name": "KBS1",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=11&ch_type=globalList",
-        "tvg_id": "KBS1TV.kr"
+        "tvg_id": "KBS1.kr"
     },
     {
-        "name": "KBS 2TV", 
+        "name": "KBS2", 
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=12&ch_type=globalList",
-        "tvg_id": "KBS2TV.kr"
+        "tvg_id": "KBS2.kr"
     },
-    # 新增KBS频道
     {
         "name": "KBS 24",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=81&ch_type=globalList",
         "tvg_id": "KBS24.kr"
     },
+    {
+        "name": "MBN",
+        "url": "https://www.mbn.co.kr/vod/onair",
+        "tvg_id": "MBN.kr"
+    },
+    # 将以下频道放在最后面
     {
         "name": "KBS DRAMA",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N91&ch_type=globalList",
@@ -60,20 +64,10 @@ CHANNELS = [
         "name": "KBS LIFE",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N93&ch_type=globalList",
         "tvg_id": "KBSLIFE.kr"
-    },
-    {
-        "name": "KBS WORLD",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=14&ch_type=globalList",
-        "tvg_id": "KBSWORLD.kr"
-    },
-    {
-        "name": "MBN",
-        "url": "https://www.mbn.co.kr/vod/onair",
-        "tvg_id": "MBN.kr"
     }
 ]
 
-# 静态频道列表
+# 静态频道列表 - 删除EBS1和EBS2
 STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
@@ -83,7 +77,7 @@ STATIC_CHANNELS = [
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv',
     'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
     '',
-   '#EXTINF:-1 tvg-id="YTN.kr",YTN',
+    '#EXTINF:-1 tvg-id="YTN.kr",YTN',
     'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8'
 ]
 
@@ -128,6 +122,29 @@ def extract_m3u8_from_network_logs(driver, target_domains):
         print(f"⚠️ 读取网络日志时出错: {e}")
     
     return list(set(m3u8_urls))
+
+def generate_kbs_auth_url(base_url, expires_time=1762427233):
+    """生成KBS认证m3u8 URL"""
+    try:
+        # 从基础URL提取信息
+        if "1tv" in base_url:
+            policy = "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjcyMzN9fX1dfQ__"
+            signature = "GBVxDBAnqoytflq9N1p5-qB0B8rGgiEpIjbXpi-Qc-L0g6MpVM13iQxNYC1v6aaDFJdFV2uAr9NC47IEMUibPkiBWSmhbcbxkN2SZOb0O6A9Cx0klgGw6GjdYcGq5pi3f3lqF-j4~VMKvlnFhLCWWWHvX~1sOwXlE4s7q-Wnt0u7H7LpaTI2cKPE~Vu7icLPd9Ayo9o2NZASPSkcx-uJN4WkWqip5kM8O093H5SNUPeqIw8b4yo7G8Yq2HpyW-vIwypyIlqdUUPSCrKsiyeqg2kh0hCJ2SZLXstGVRM8p4duw~mCXsJ1rVeD1CGFwulXa~~flfTvbx43MzF-4aT~bw__"
+        elif "2tv" in base_url:
+            policy = "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjcyNzZ9fX1dfQ__"
+            signature = "DgbgcW5Haz-YVw5bqq47O4HiEJvTBfwRUfkGetKgES3uhz506oZXUta9Kqg6qLy76ebdCm3gCYeMD9VoELebw~VceIckPB63j-Tty717Apj-M34J5KiebJCh1JkNiR04tY3YH48R~-AMT28a4Gx-GxfHVCIgcoWlqKL80-gIbevOWHpUCHZyqDnXs3omLSYai7lcV0MrQ3hG9bbG1jQyzkoMdv4lwMbeaBUcCuBLiUUjVcgR71-fQf8pGeNLlvUo0sskdATdAGp8t~tgxycTEBAelQEv2lCKLb341vc6cvh9QIEELGX4wR5pxSSQL~TkERoxj~DB5ExxWMM2shXfWw__"
+        else:
+            return base_url  # 如果不是KBS1或KBS2，返回原URL
+        
+        key_pair_id = "APKAICDSGT3Y7IXGJ3TA"
+        
+        # 生成认证URL
+        auth_url = f"{base_url}?Expires={expires_time}&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
+        return auth_url
+        
+    except Exception as e:
+        print(f"❌ 生成KBS认证URL时出错: {str(e)}")
+        return base_url
 
 def get_kbs_m3u8(driver, url, channel_name):
     """获取KBS的m3u8链接 - 修复KBS2版本"""
@@ -240,25 +257,25 @@ def get_kbs_m3u8(driver, url, channel_name):
             if auth_urls:
                 selected_url = auth_urls[0]
                 print(f"✅ 找到 {channel_name} 真实认证地址")
-            # 其次选择包含频道标识的URL
-            elif "1TV" in channel_name:
-                tv1_urls = [url for url in unique_urls if '1tv' in url.lower()]
-                selected_url = tv1_urls[0] if tv1_urls else unique_urls[0]
-            elif "2TV" in channel_name:
-                tv2_urls = [url for url in unique_urls if '2tv' in url.lower()]
-                selected_url = tv2_urls[0] if tv2_urls else unique_urls[0]
             else:
                 selected_url = unique_urls[0]
+                # 如果是KBS1或KBS2但没有认证参数，手动生成认证URL
+                if "KBS1" in channel_name or "KBS2" in channel_name:
+                    base_url = selected_url.split('?')[0]  # 获取基础URL
+                    selected_url = generate_kbs_auth_url(base_url)
+                    print(f"✅ 为 {channel_name} 生成认证地址")
             
             print(f"🔗 最终选择: {selected_url}")
             return selected_url
         else:
             print(f"❌ 未找到 {channel_name} 的真实m3u8地址，使用静态地址")
             # 返回静态地址
-            if "1TV" in channel_name:
-                return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
-            elif "2TV" in channel_name:
-                return "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+            if "KBS1" in channel_name:
+                base_url = "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
+                return generate_kbs_auth_url(base_url)
+            elif "KBS2" in channel_name:
+                base_url = "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
+                return generate_kbs_auth_url(base_url)
             elif "24" in channel_name:
                 return "https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8"
             elif "DRAMA" in channel_name:
@@ -269,8 +286,6 @@ def get_kbs_m3u8(driver, url, channel_name):
                 return "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8"
             elif "LIFE" in channel_name:
                 return "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
-            elif "WORLD" in channel_name:
-                return "https://world.gscdn.kbs.co.kr/world-02/world-02_sd.m3u8"
             return None
             
     except Exception as e:
