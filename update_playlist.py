@@ -541,15 +541,26 @@ def generate_playlist(dynamic_channels):
     lines.append(f"# 自动生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("")
     
-    # 添加动态获取的频道
+    # 分离出要放在后面的频道
+    later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
+    
+    # 先添加其他动态频道
     for channel in dynamic_channels:
-        if channel.get('url'):
+        if channel.get('url') and channel['name'] not in later_channels:
             lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
             lines.append(channel['url'])
             lines.append("")
     
     # 添加静态频道
     lines.extend(STATIC_CHANNELS)
+    lines.append("")
+    
+    # 最后添加指定的KBS频道
+    for channel in dynamic_channels:
+        if channel.get('url') and channel['name'] in later_channels:
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
+            lines.append(channel['url'])
+            lines.append("")
     
     return "\n".join(lines)
 
