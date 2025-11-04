@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist和固定仓库
-修正KBS频道和MBN双画质版本
+使用带认证参数的完整KBS m3u8链接
 """
 
 import requests
@@ -22,22 +22,24 @@ GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 GITHUB_TOKEN = FULL_ACCESS_TOKEN
 
-# 电视台配置 - 修正KBS频道和恢复MBN双画质
+# 电视台配置 - 使用完整的认证m3u8链接
 CHANNELS = [
-    # 主要KBS频道
+    # 主要KBS频道 - 使用完整的认证链接
     {
         "name": "KBS1",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=11&ch_type=globalList",
         "tvg_id": "KBS1.kr",
-        "type": "kbs"
+        "type": "kbs_static",
+        "static_url": "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Expires=1762425854&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjU4NTR9fX1dfQ__&Signature=dCyv1iYAGjF8iIUUoDJXNUSr4je53owEB481v35e4-ERun6JCbiTE5DDl7aIM~M56Naka2WKzgWExGVBXZ-kK71uH5eIKahI580dyrhZZPiUuiTCsXfncIUQ1-SKeeZl8dikkwcde1YF2uaXz82RIS5Bgrlmgx32ylNSnKdZwXffM8goH7ow-YJ0CgKRMxf7FWP7F1jI2RqbmVcHFqZYy2QAbAstc3y40FnmVSyCC~986wEN-gFlVNvEis3sunIErEZQ~HYDFbgvmgbwriVOJo-ir4Z~UCHZDXi5ai0ScczrIImDN57-mpNTIqzD2-SY8kt5OBS6rSEBKp~gxw7QQQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA"
     },
     {
         "name": "KBS2", 
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=12&ch_type=globalList",
         "tvg_id": "KBS2.kr",
-        "type": "kbs"
+        "type": "kbs",
+        "backup_url": "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
     },
-    # 新增KBS系列频道
+    # 新增KBS系列频道 - 使用完整的认证链接
     {
         "name": "KBS 24",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=81&ch_type=globalList",
@@ -63,24 +65,24 @@ CHANNELS = [
         "name": "KBS STORY",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N94&ch_type=globalList",
         "tvg_id": "KBSSTORY.kr",
-        "type": "kbs_static",  # 特殊类型，直接使用静态地址
-        "static_url": "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8"
+        "type": "kbs_static",
+        "static_url": "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8?Expires=1762425927&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNudy5nc2Nkbi5rYnMuY28ua3Iva2JzbnctMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjQyNTkyN319fV19&Signature=i1~LzLL1w8RT7CpbROQORjYu60J4dxjfpC-BlOfFZ7eSle4rR5tsga37iK7VsNf0IOchcS6IbazKWbGZJMabkCGjQL2mgaHT21ZC3ZPB1bs3xe9ktSuS0G0NKzkU6wJBA4m3Jl9mbOKIUwixGLVDMjr2SxgmGxbYt-5bN6WWW-3j0gyW9tiQkHSWWqWfc~df8EbZpT-vqoFHMdr7ZUrkLmd66iCPavmbrZy4NQrM2f1eeTh6Q1tWBQIAR6F4gv3qExAmfRwP443PW-rNY2UIaCj01~DB1CxXYuDOhKABZBP2zUkWwoQjJ5vMOaHjNoPldWi9aPRt3M8G-0P7HeCxEQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA"
     },
     {
         "name": "KBS LIFE",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N93&ch_type=globalList",
         "tvg_id": "KBSLIFE.kr",
-        "type": "kbs_static",  # 特殊类型，直接使用静态地址
-        "static_url": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
+        "type": "kbs_static",
+        "static_url": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8?Expires=1762425930&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNubGlmZS5nc2Nkbi5rYnMuY28ua3Iva2JzbmxpZmUtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjQyNTkzMH19fV19&Signature=IRmmB07i634UCb9mMbYwX0JGh3VQA77jMspDkd4enL2n-Kfhrhn98x9Wh4e~ph74LuvL-ySfZGumC5UV2pmxSTYpkqsVYSCMEMCTy3QzeV~NVGNvjBuH9gAscEEwhoRMVz~V-fL20f-P2Zk6Nhno6NOq~D1S7FoLEeyxTiuSw2j~tAhjeW72pjZYY7JmrUYWRxF8NqD120eaGqdNcTcdjKWMtGAMGbA65aBab7icpWVztadD3IyoRUWp15x00503Rv~DASErInA5Pfaf4SLdKwOityEeKIbr9kSsRdeF2xBhRqwbnf69TBsHorr-iLcnzn32Vhkl9HeObyjeAXKntw__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA"
     },
     {
         "name": "KBS WORLD",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=14&ch_type=globalList",
         "tvg_id": "KBSWORLD.kr",
-        "type": "kbs_static",  # 特殊类型，直接使用静态地址
-        "static_url": "https://world.gscdn.kbs.co.kr/world-02/world-02_sd.m3u8"
+        "type": "kbs_static",
+        "static_url": "https://world.gscdn.kbs.co.kr/world-02/world-02_sd.m3u8?Expires=1762426071&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly93b3JsZC5nc2Nkbi5rYnMuY28ua3Ivd29ybGQtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MjQyNjA3MX19fV19&Signature=fG1xFt1eHtrx-DqtzDFjekGKWerjV4I-D3WZausxxEigChhTtSDhRb~LTegFtuIThYvuT0pcJKMhxthrA6sg90A9LFTJL0tX14KXyebOaIHAFhadLZofZktWzlT7jNvDg2HyvjuU4MGAu-m1GzNOaLiLXuyZpoO5VOHtqroC3LfUGym-tYwLl19xh~~viXlQvNGm4bmd5LufXY524bMa6N-O0up20fOGd2j9kdA8cW8E9GFSGUIDzwCNZoGsVhPifhvHzRk-UX4rwDQSL~fgU3QNnA2W8q3bPDgsQnezGadvi6fiV2rcdCR5ALU3zuJbR8jSwJM8GRy1RGjy8x5CdA__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA"
     },
-    # MBN频道 - 恢复双画质
+    # MBN频道 - 双画质版本
     {
         "name": "MBN",
         "url": "https://www.mbn.co.kr/vod/onair",
@@ -194,14 +196,8 @@ def get_kbs_m3u8(driver, url, channel_name, backup_url=None):
                 print(f"⚠️ 未找到 {channel_name}，使用备用地址")
                 return backup_url
             else:
-                # 对于KBS1和KBS2，使用默认备用地址
-                if "KBS1" in channel_name:
-                    return "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
-                elif "KBS2" in channel_name:
-                    return "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8"
-                else:
-                    print(f"❌ 未找到 {channel_name} 且无备用地址")
-                    return None
+                print(f"❌ 未找到 {channel_name} 且无备用地址")
+                return None
             
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
@@ -473,9 +469,9 @@ def main():
             if channel['type'] == 'kbs':
                 m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'], channel.get('backup_url'))
             elif channel['type'] == 'kbs_static':
-                # 对于KBS STORY, KBS LIFE, KBS WORLD，直接使用静态地址
+                # 对于KBS1, KBS STORY, KBS LIFE, KBS WORLD，直接使用完整的认证地址
                 m3u8_url = channel.get('static_url')
-                print(f"✅ {channel['name']} - 使用静态地址")
+                print(f"✅ {channel['name']} - 使用完整认证地址")
             elif channel['type'] == 'mbn_multiple':
                 # MBN多画质版本
                 mbn_channels = get_mbn_m3u8_multiple_quality(driver)
@@ -512,11 +508,6 @@ def main():
         print("\n🎯 成功频道列表:")
         for channel in successful_channels:
             print(f"  ✅ {channel['name']}")
-        
-        # 显示MBN版本信息
-        mbn_versions = [ch for ch in dynamic_channels if 'MBN' in ch['name']]
-        for mbn in mbn_versions:
-            print(f"  📺 {mbn['name']}")
         
         if gist_success and repo_success:
             print("\n🎉 所有更新操作成功完成!")
