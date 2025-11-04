@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新Gist和固定仓库
-支持多KBS频道版本
+修正KBS频道和MBN双画质版本
 """
 
 import requests
@@ -22,7 +22,7 @@ GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 GITHUB_TOKEN = FULL_ACCESS_TOKEN
 
-# 电视台配置 - 更新KBS频道名称并添加新频道
+# 电视台配置 - 修正KBS频道和恢复MBN双画质
 CHANNELS = [
     # 主要KBS频道
     {
@@ -63,29 +63,29 @@ CHANNELS = [
         "name": "KBS STORY",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N94&ch_type=globalList",
         "tvg_id": "KBSSTORY.kr",
-        "type": "kbs",
-        "backup_url": "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8"
+        "type": "kbs_static",  # 特殊类型，直接使用静态地址
+        "static_url": "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8"
     },
     {
         "name": "KBS LIFE",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N93&ch_type=globalList",
         "tvg_id": "KBSLIFE.kr",
-        "type": "kbs",
-        "backup_url": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
+        "type": "kbs_static",  # 特殊类型，直接使用静态地址
+        "static_url": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
     },
     {
         "name": "KBS WORLD",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=14&ch_type=globalList",
         "tvg_id": "KBSWORLD.kr",
-        "type": "kbs",
-        "backup_url": "https://world.gscdn.kbs.co.kr/world-02/world-02_sd.m3u8"
+        "type": "kbs_static",  # 特殊类型，直接使用静态地址
+        "static_url": "https://world.gscdn.kbs.co.kr/world-02/world-02_sd.m3u8"
     },
-    # MBN频道
+    # MBN频道 - 恢复双画质
     {
         "name": "MBN",
         "url": "https://www.mbn.co.kr/vod/onair",
         "tvg_id": "MBN.kr",
-        "type": "mbn"
+        "type": "mbn_multiple"
     }
 ]
 
@@ -152,12 +152,12 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8(driver, url, channel_name, backup_url=None):
-    """获取KBS的m3u8链接 - 优化版本"""
+    """获取KBS的m3u8链接"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
         driver.get(url)
-        time.sleep(10)  # 适当等待时间
+        time.sleep(10)
         
         target_domains = ['kbs.co.kr', 'gscdn.kbs.co.kr']
         m3u8_urls = []
@@ -208,43 +208,150 @@ def get_kbs_m3u8(driver, url, channel_name, backup_url=None):
         # 出错时返回备用地址
         return backup_url
 
-def get_mbn_m3u8(driver):
-    """获取MBN的m3u8链接 - 简化版本"""
+def get_real_mbn_url_from_response(auth_url):
+    """从MBN认证链接的响应内容获取真实m3u8地址"""
     try:
-        print("🎬 正在获取 MBN...")
-        driver.get("https://www.mbn.co.kr/vod/onair")
-        time.sleep(10)
+        print(f"🔗 请求MBN认证链接: {auth_url}")
         
-        target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
-        m3u8_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://www.mbn.co.kr/vod/onair'
+        }
         
-        # 查找认证链接
-        auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
+        response = requests.get(auth_url, headers=headers, timeout=10)
         
-        if auth_urls:
-            # 使用第一个认证链接获取真实地址
-            auth_url = auth_urls[0]
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': '*/*',
-                'Referer': 'https://www.mbn.co.kr/vod/onair'
-            }
-            
-            response = requests.get(auth_url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                content = response.text.strip()
-                if content.startswith('http') and '.m3u8' in content:
-                    print(f"✅ 找到 MBN: {content[:80]}...")
-                    return content
-        
-        # 备用地址
-        backup_url = "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
-        print(f"⚠️ 使用MBN备用地址: {backup_url}")
-        return backup_url
+        if response.status_code == 200:
+            content = response.text.strip()
+            if content.startswith('http') and '.m3u8' in content and 'hls-live.mbn.co.kr' in content:
+                print(f"✅ 获取到MBN地址: {content}")
+                return content
+            else:
+                print(f"❌ 响应内容不是有效的m3u8 URL: {content}")
+                return None
+        else:
+            print(f"❌ 认证链接请求失败，状态码: {response.status_code}")
+            return None
             
     except Exception as e:
-        print(f"❌ 获取 MBN 时出错: {str(e)}")
-        return "https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8"
+        print(f"❌ 请求MBN认证链接时出错: {str(e)}")
+        return None
+
+def get_mbn_m3u8_multiple_quality(driver):
+    """获取MBN的m3u8链接 - 同时获取1000k和600k版本"""
+    mbn_channels = []
+    
+    try:
+        print("🚀 正在获取 MBN 多画质版本...")
+        driver.get("https://www.mbn.co.kr/vod/onair")
+        time.sleep(15)
+        
+        m3u8_urls = []
+        target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
+        
+        # 网络请求监控 - 查找认证链接
+        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
+        m3u8_urls.extend(network_urls)
+        
+        # 查找所有认证代理链接
+        auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
+        
+        # 分别处理1000k和600k版本
+        quality_configs = [
+            {
+                'quality': '1000k',
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'auth_urls': [url for url in auth_urls if '1000k' in url],
+                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8'
+            },
+            {
+                'quality': '600k',
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'auth_urls': [url for url in auth_urls if '600k' in url],
+                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8'
+            }
+        ]
+        
+        for config in quality_configs:
+            print(f"\n🎯 正在获取 {config['quality']} 版本...")
+            
+            real_url = None
+            
+            # 首先尝试自动发现的认证链接
+            if config['auth_urls']:
+                print(f"🔍 找到 {config['quality']} 认证链接: {config['auth_urls'][0]}")
+                real_url = get_real_mbn_url_from_response(config['auth_urls'][0])
+                if real_url:
+                    print(f"✅ 成功获取 {config['quality']} 版本")
+                else:
+                    print(f"❌ 自动发现的 {config['quality']} 认证链接无效")
+            
+            # 如果自动发现的链接失败，尝试构造认证链接
+            if not real_url:
+                print(f"🔄 尝试构造 {config['quality']} 认证链接...")
+                constructed_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={config['base_url']}"
+                
+                print(f"🔧 尝试构造的认证链接: {constructed_auth_url}")
+                real_url = get_real_mbn_url_from_response(constructed_auth_url)
+                if real_url:
+                    print(f"✅ 通过构造链接获取 {config['quality']} 版本")
+                else:
+                    print(f"❌ 构造链接也失败，使用备用地址")
+                    real_url = config['backup_url']
+            
+            # 添加到频道列表
+            if real_url:
+                mbn_channels.append({
+                    'name': config['name'],
+                    'tvg_id': config['tvg_id'],
+                    'url': real_url,
+                    'quality': config['quality']
+                })
+        
+        # 如果两个版本都获取成功
+        if len(mbn_channels) == 2:
+            print("🎉 成功获取MBN双画质版本！")
+        elif len(mbn_channels) == 1:
+            print(f"⚠️ 只成功获取 {mbn_channels[0]['quality']} 版本")
+        else:
+            print("❌ 未能获取任何MBN版本，使用备用地址")
+            # 添加备用地址
+            mbn_channels.append({
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'quality': '1000k'
+            })
+            mbn_channels.append({
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'quality': '600k'
+            })
+            
+        return mbn_channels
+            
+    except Exception as e:
+        print(f"❌ 获取 MBN 多画质版本时出错: {str(e)}")
+        # 返回备用地址
+        return [
+            {
+                'name': 'MBN（高画质）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+                'quality': '1000k'
+            },
+            {
+                'name': 'MBN（标清）',
+                'tvg_id': 'MBN.kr',
+                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
+                'quality': '600k'
+            }
+        ]
 
 def update_gist(content):
     """更新Gist内容"""
@@ -365,8 +472,15 @@ def main():
             
             if channel['type'] == 'kbs':
                 m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'], channel.get('backup_url'))
-            elif channel['type'] == 'mbn':
-                m3u8_url = get_mbn_m3u8(driver)
+            elif channel['type'] == 'kbs_static':
+                # 对于KBS STORY, KBS LIFE, KBS WORLD，直接使用静态地址
+                m3u8_url = channel.get('static_url')
+                print(f"✅ {channel['name']} - 使用静态地址")
+            elif channel['type'] == 'mbn_multiple':
+                # MBN多画质版本
+                mbn_channels = get_mbn_m3u8_multiple_quality(driver)
+                dynamic_channels.extend(mbn_channels)
+                continue  # 跳过单个添加，因为已经添加了多个版本
             
             if m3u8_url:
                 dynamic_channels.append({
@@ -393,11 +507,16 @@ def main():
         
         # 打印统计信息
         successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
-        print(f"\n📊 任务完成! 成功获取 {len(successful_channels)}/{len(CHANNELS)} 个频道")
+        print(f"\n📊 任务完成! 成功获取 {len(successful_channels)} 个频道")
         
         print("\n🎯 成功频道列表:")
         for channel in successful_channels:
             print(f"  ✅ {channel['name']}")
+        
+        # 显示MBN版本信息
+        mbn_versions = [ch for ch in dynamic_channels if 'MBN' in ch['name']]
+        for mbn in mbn_versions:
+            print(f"  📺 {mbn['name']}")
         
         if gist_success and repo_success:
             print("\n🎉 所有更新操作成功完成!")
