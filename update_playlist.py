@@ -22,7 +22,7 @@ GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 GITHUB_TOKEN = FULL_ACCESS_TOKEN
 
-# 电视台配置 - 调整顺序，删除指定频道
+# 电视台配置 - KBS DRAMA、KBS JOY、KBS STORY、KBS LIFE 放在最后面
 CHANNELS = [
     {
         "name": "KBS1",
@@ -44,7 +44,7 @@ CHANNELS = [
         "url": "https://www.mbn.co.kr/vod/onair",
         "tvg_id": "MBN.kr"
     },
-    # 将以下频道放在最后面
+    # 以下频道放在所有频道的最后面
     {
         "name": "KBS DRAMA",
         "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N91&ch_type=globalList",
