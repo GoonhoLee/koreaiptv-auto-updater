@@ -667,9 +667,6 @@ def main():
         # 更新GitHub仓库
         update_stable_repository(playlist_content)
         
-        # 更新Gitee仓库
-        update_gitee_repository(playlist_content)
-        
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
             f.write(playlist_content)
