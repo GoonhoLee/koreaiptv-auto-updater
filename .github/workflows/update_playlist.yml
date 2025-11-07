@@ -1,37 +1,66 @@
-name: Update M3U Playlist
+name: Update M3U Playlist and Sync
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # 每天 UTC 0 点运行（北京时间早上8点）
+  workflow_dispatch:      # 支持手动触发
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
-  update-playlist:
+  update-and-sync:
     runs-on: ubuntu-latest
     
     steps:
+    # 1. 检出代码（使用有权限的token）
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        
+        fetch-depth: 0  # 获取所有历史记录，便于解决冲突
+
+    # 2. 设置Python环境
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-        
+
+    # 3. 安装依赖
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests selenium beautifulsoup4
-        
+        pip install requests selenium beautifulsoup4 webdriver-manager
+
+    # 4. 安装Chrome浏览器
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
-      
-    - name: Run update script with debug
+
+    # 5. 拉取远程更改并解决冲突
+    - name: Pull latest changes and resolve conflicts
+      env:
+        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        
+        # 拉取最新更改，如有冲突优先使用远程版本
+        git pull origin main --strategy-option theirs --no-edit || true
+        
+        # 如果有未解决的冲突，使用远程版本
+        if git diff --name-only --diff-filter=U | grep -q .; then
+          echo "🔧 检测到冲突，正在解决..."
+          git diff --name-only --diff-filter=U | while read file; do
+            echo "解决冲突文件: $file"
+            git checkout --theirs "$file" || true
+            git add "$file"
+          done
+        fi
+
+    # 6. 运行更新脚本
+    - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
@@ -40,26 +69,68 @@ jobs:
         echo "FULL_ACCESS_TOKEN 长度: ${#FULL_ACCESS_TOKEN}"
         echo "GITEE_TOKEN 长度: ${#GITEE_TOKEN}"
         
+        # 运行主要的更新脚本
         python update_playlist.py
         
-    - name: Setup Git
+        # 检查是否生成了新的播放列表文件
+        if [ -f "korean_tv.m3u" ]; then
+          echo "✅ M3U文件已生成"
+          echo "📊 文件信息:"
+          ls -la korean_tv.m3u
+          echo "📝 前几行内容:"
+          head -5 korean_tv.m3u
+        else
+          echo "❌ M3U文件未生成"
+          exit 1
+        fi
+
+    # 7. 提交更改到GitHub
+    - name: Commit and push to GitHub
+      env:
+        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-    - name: Push to GitHub (Direct Force)
-      env:
-        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
-      run: |
-        git add -A
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
-        git push origin main --force
-        
-    - name: Push to Gitee
-      if: env.GITEE_TOKEN != ''
+        # 检查是否有更改
+        if git status --porcelain | grep -q .; then
+          echo "📦 检测到更改，正在提交..."
+          git add -A
+          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+          git push origin main
+          echo "✅ GitHub提交完成"
+        else
+          echo "📭 没有检测到更改，跳过提交"
+        fi
+
+    # 8. 同步到Gitee（如果有GITEE_TOKEN）
+    - name: Sync to Gitee
+      if: secrets.GITEE_TOKEN != ''
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
+        echo "🔄 开始同步到Gitee..."
+        
+        # 添加Gitee远程仓库
+        git remote add gitee https://gitee.com/leegoonho/korean-tv-static.git || true
+        
+        # 拉取Gitee最新更改（如果有）
+        git fetch gitee || true
+        
+        # 强制推送到Gitee（确保两边同步）
         git push gitee main:master --force
+        
         echo "✅ Gitee同步完成"
+        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+
+    # 9. 输出最终状态
+    - name: Output status
+      run: |
+        echo "🎉 自动化更新完成!"
+        echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
+        if [ -n "${{ secrets.GITEE_TOKEN }}" ]; then
+          echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+        else
+          echo "ℹ️  Gitee同步已跳过（未设置GITEE_TOKEN）"
+        fi
+        echo "⏰ 下次自动运行时间: 明天 UTC 0 点（北京时间早上8点）"
