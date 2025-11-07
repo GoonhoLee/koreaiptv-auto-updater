@@ -38,8 +38,7 @@ jobs:
       run: |
         python update_playlist.py
         
-    - name: Push to Gitee
-      if: always()  # 即使前面的步骤失败也尝试推送到Gitee
+    - name: Initialize and Push to Gitee
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
@@ -50,13 +49,37 @@ jobs:
         # 添加Gitee远程仓库
         git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
         
-        # 添加所有文件
+        # 检查当前文件状态
+        echo "📁 当前文件状态:"
+        ls -la
+        
+        # 确保korean_tv.m3u文件存在
+        if [ ! -f "korean_tv.m3u" ]; then
+          echo "❌ korean_tv.m3u文件不存在，创建示例文件"
+          echo "#EXTM3U" > korean_tv.m3u
+          echo "# 示例播放列表" >> korean_tv.m3u
+        fi
+        
+        # 添加所有文件到Git
         git add -A
         
         # 提交更改
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有更改需要提交"
+        if git diff --cached --quiet; then
+          echo "✅ 没有更改需要提交"
+        else
+          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+          echo "✅ 更改已提交"
+        fi
         
-        # 推送到Gitee
-        git push gitee main || echo "Gitee推送失败或无需推送"
+        # 推送到Gitee（处理空仓库的情况）
+        echo "🚀 推送到Gitee..."
+        if git push gitee main; then
+          echo "✅ Gitee推送成功！"
+        else
+          echo "🔄 首次推送失败，尝试强制推送初始化..."
+          git push --force gitee main
+          echo "✅ Gitee强制推送成功！"
+        fi
         
-        echo "✅ 同步到Gitee完成！"
+        echo "🎉 Gitee同步完成！"
+        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/main/korean_tv.m3u"
