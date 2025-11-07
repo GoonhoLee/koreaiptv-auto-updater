@@ -17,6 +17,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
+        fetch-depth: 0
         
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -43,7 +44,7 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-    - name: Push to GitHub (Force Update)
+    - name: Push to GitHub (No-Rebase Strategy)
       env:
         GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
@@ -60,35 +61,90 @@ jobs:
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         echo "✅ 更改已提交"
         
-        # 强制推送到GitHub（覆盖远程）
-        echo "🚀 强制推送到GitHub..."
-        git push origin main --force
-        echo "✅ GitHub强制推送成功！"
+        # 先获取最新远程更改（不使用rebase）
+        echo "🔄 获取最新远程更改..."
+        git fetch origin
         
-    - name: Check Gitee Token
-      id: check_gitee
+        # 重置到远程最新状态，保留我们的更改
+        echo "🔄 合并远程更改..."
+        git merge origin/main --strategy-option theirs --no-edit || echo "合并完成"
+        
+        # 如果有冲突，使用我们的版本
+        if git status | grep -q "both modified"; then
+          echo "🔄 检测到冲突，使用本地版本..."
+          git checkout --ours korean_tv.m3u
+          git add korean_tv.m3u
+          # 重新提交
+          git commit -m "Resolve merge conflict - use updated playlist"
+        fi
+        
+        # 推送更改到GitHub
+        echo "🚀 推送到GitHub..."
+        git push origin main
+        echo "✅ GitHub推送成功！"
+        
+    - name: Check Gitee Token Status
+      id: gitee_check
       run: |
         if [ -n "${{ secrets.GITEE_TOKEN }}" ]; then
-          echo "Gitee Token is available"
+          echo "✅ GITEE_TOKEN 已设置"
           echo "gitee_available=true" >> $GITHUB_OUTPUT
         else
-          echo "Gitee Token is not available"
+          echo "❌ GITEE_TOKEN 未设置，请在 GitHub Secrets 中配置"
           echo "gitee_available=false" >> $GITHUB_OUTPUT
         fi
         
     - name: Push to Gitee
-      if: steps.check_gitee.outputs.gitee_available == 'true'
+      if: steps.gitee_check.outputs.gitee_available == 'true'
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
+        # 检查当前分支状态
+        echo "📊 当前分支状态:"
+        git branch -v
+        git status
+        
         # 添加Gitee远程仓库
         git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
         
+        # 检查Gitee远程仓库连接
+        echo "🔍 检查Gitee远程仓库..."
+        git ls-remote gitee || echo "无法连接到Gitee远程仓库"
+        
         # 强制推送到Gitee
         echo "🚀 推送到Gitee..."
-        git push gitee main --force
-        echo "✅ Gitee推送成功！"
+        if git push gitee main --force; then
+          echo "✅ Gitee推送成功！"
+        else
+          echo "🔄 首次推送失败，尝试初始化推送..."
+          # 如果失败，可能是分支不匹配，尝试推送到master分支
+          git push gitee main:master --force || echo "Gitee推送失败"
+          echo "✅ Gitee初始化推送完成！"
+        fi
         
         echo "🎉 双平台同步完成！"
         echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
         echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+        
+    - name: Create Release with Updated Playlist
+      if: success()
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: update-$(date +'%Y%m%d-%H%M%S')
+        name: "Playlist Update $(date +'%Y-%m-%d %H:%M:%S')"
+        body: |
+          自动更新的韩国电视台播放列表
+          
+          ## 更新内容
+          - 自动抓取最新的M3U8直播源
+          - 支持多画质版本
+          - 每日自动更新
+          
+          ## 静态链接
+          - GitHub: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
+          - Gitee: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u
+        files: korean_tv.m3u
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
