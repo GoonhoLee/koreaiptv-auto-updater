@@ -17,6 +17,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
+        fetch-depth: 0
         
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -38,48 +39,106 @@ jobs:
       run: |
         python update_playlist.py
         
-    - name: Initialize and Push to Gitee
-      env:
-        GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+    - name: Setup Git
       run: |
-        # 设置Git身份
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
+    - name: Push to GitHub
+      env:
+        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+      run: |
+        # 添加所有更改
+        git add -A
+        
+        # 检查是否有更改需要提交
+        if git diff --staged --quiet; then
+          echo "✅ 没有需要提交的更改"
+        else
+          # 提交更改
+          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+          echo "✅ 更改已提交到本地"
+          
+          # 先拉取远程更改（使用merge策略）
+          echo "拉取远程更改..."
+          git fetch origin
+          git merge origin/main --no-edit -X theirs || echo "合并完成或有冲突"
+          
+          # 如果有冲突，强制使用本地版本
+          if git status | grep -q "both modified"; then
+            echo "🔄 检测到冲突，使用本地版本..."
+            git checkout --ours korean_tv.m3u
+            git add korean_tv.m3u
+          fi
+          
+          # 再次提交（如果需要）
+          if ! git diff --staged --quiet; then
+            git commit -m "Resolve conflicts - use updated playlist"
+          fi
+          
+          # 推送更改到GitHub
+          echo "推送更改到GitHub..."
+          git push origin main
+          echo "✅ GitHub推送成功！"
+        fi
+        
+    - name: Push to Gitee
+      env:
+        GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+      run: |
         # 添加Gitee远程仓库
-        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
+        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
         
         # 检查当前文件状态
         echo "📁 当前文件状态:"
-        ls -la
+        ls -la korean_tv.m3u || echo "korean_tv.m3u文件不存在"
         
         # 确保korean_tv.m3u文件存在
         if [ ! -f "korean_tv.m3u" ]; then
           echo "❌ korean_tv.m3u文件不存在，创建示例文件"
           echo "#EXTM3U" > korean_tv.m3u
           echo "# 示例播放列表" >> korean_tv.m3u
+          git add korean_tv.m3u
+          git commit -m "Create initial playlist file"
         fi
         
-        # 添加所有文件到Git
+        # 添加所有文件到Git（确保最新更改）
         git add -A
-        
-        # 提交更改
-        if git diff --cached --quiet; then
-          echo "✅ 没有更改需要提交"
-        else
-          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-          echo "✅ 更改已提交"
+        if ! git diff --staged --quiet; then
+          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有新更改"
         fi
         
-        # 推送到Gitee（处理空仓库的情况）
+        # 推送到Gitee
         echo "🚀 推送到Gitee..."
         if git push gitee main; then
           echo "✅ Gitee推送成功！"
         else
-          echo "🔄 首次推送失败，尝试强制推送初始化..."
+          echo "🔄 首次推送失败，尝试强制推送..."
           git push --force gitee main
           echo "✅ Gitee强制推送成功！"
         fi
         
-        echo "🎉 Gitee同步完成！"
+        echo "🎉 双平台同步完成！"
+        echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
         echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/main/korean_tv.m3u"
+        
+    - name: Create Release with Playlist
+      uses: softprops/action-gh-release@v1
+      if: success()
+      with:
+        tag_name: update-$(date +'%Y%m%d-%H%M%S')
+        name: "Playlist Update $(date +'%Y-%m-%d %H:%M:%S')"
+        body: |
+          自动更新的韩国电视台播放列表
+          
+          ## 静态链接
+          - GitHub: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
+          - Gitee: https://gitee.com/leegoonho/korean-tv-static/raw/main/korean_tv.m3u
+          
+          ## 更新内容
+          自动抓取最新的M3U8直播源
+        files: korean_tv.m3u
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
