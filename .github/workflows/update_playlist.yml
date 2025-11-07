@@ -2,8 +2,8 @@ name: Update M3U Playlist
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天UTC时间0点运行
-  workflow_dispatch:      # 允许手动触发
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,7 +17,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        fetch-depth: 0
         
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -32,11 +31,15 @@ jobs:
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
       
-    - name: Run update script
+    - name: Run update script with debug
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
+        echo "🔍 环境变量调试信息:"
+        echo "FULL_ACCESS_TOKEN 长度: ${#FULL_ACCESS_TOKEN}"
+        echo "GITEE_TOKEN 长度: ${#GITEE_TOKEN}"
+        
         python update_playlist.py
         
     - name: Setup Git
@@ -44,114 +47,19 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-    - name: Push to GitHub (Force Strategy)
+    - name: Push to GitHub (Direct Force)
       env:
         GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        # 添加所有更改
         git add -A
-        
-        # 检查是否有更改需要提交
-        if git diff --staged --quiet; then
-          echo "✅ 没有需要提交的更改"
-          exit 0
-        fi
-        
-        # 提交更改
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-        echo "✅ 更改已提交"
-        
-        # 直接强制推送到GitHub，避免任何合并冲突
-        echo "🚀 强制推送到GitHub..."
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
         git push origin main --force
-        echo "✅ GitHub强制推送成功！"
-        
-    - name: Check Gitee Token Status
-      id: gitee_check
-      run: |
-        if [ -n "${{ secrets.GITEE_TOKEN }}" ]; then
-          echo "✅ GITEE_TOKEN 已设置"
-          echo "gitee_available=true" >> $GITHUB_OUTPUT
-        else
-          echo "❌ GITEE_TOKEN 未设置，请在 GitHub Secrets 中配置"
-          echo "gitee_available=false" >> $GITHUB_OUTPUT
-        fi
         
     - name: Push to Gitee
-      if: steps.gitee_check.outputs.gitee_available == 'true'
+      if: env.GITEE_TOKEN != ''
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        # 检查当前分支状态
-        echo "📊 当前分支状态:"
-        git branch -v
-        git log --oneline -5
-        
-        # 添加Gitee远程仓库
-        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
-        
-        # 检查Gitee远程仓库连接
-        echo "🔍 检查Gitee远程仓库连接..."
-        git ls-remote gitee || echo "无法连接到Gitee远程仓库，将继续尝试推送"
-        
-        # 强制推送到Gitee的master分支
-        echo "🚀 强制推送到Gitee master分支..."
-        if git push gitee main:master --force; then
-          echo "✅ Gitee推送成功！"
-        else
-          echo "🔄 首次推送失败，尝试其他推送方式..."
-          # 尝试推送到main分支
-          git push gitee main --force || echo "推送到main分支失败"
-          echo "🔄 尝试初始化推送..."
-          # 如果还是失败，重新添加远程并推送
-          git remote remove gitee
-          git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
-          git push gitee main:master --force --no-verify || echo "最终推送尝试失败"
-          echo "✅ Gitee初始化推送完成！"
-        fi
-        
-        echo "🎉 Gitee同步流程完成！"
-        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
-        
-    - name: Verify Gitee Sync
-      if: steps.gitee_check.outputs.gitee_available == 'true'
-      run: |
-        echo "🔍 验证Gitee同步状态..."
-        echo "📊 最终同步结果:"
-        echo "✅ GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
-        echo "✅ Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
-        echo "🎉 双平台同步流程全部完成！"
-        
-    - name: Create GitHub Release
-      if: success()
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: update-$(date +'%Y%m%d-%H%M%S')
-        name: "Playlist Update $(date +'%Y-%m-%d %H:%M:%S')"
-        body: |
-          自动更新的韩国电视台播放列表
-          
-          ## 更新内容
-          - 自动抓取最新的M3U8直播源
-          - 支持多画质版本
-          - 每日自动更新
-          - 双平台同步（GitHub + Gitee）
-          
-          ## 支持的频道
-          - KBS1, KBS2, KBS 24
-          - MBN (高画质 + 标清双版本)
-          - KBS DRAMA, KBS JOY, KBS STORY, KBS LIFE
-          - TV Chosun, TV Chosun 2, YTN
-          
-          ## 静态链接
-          - **GitHub**: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
-          - **Gitee**: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u
-          
-          ## 使用说明
-          在支持M3U播放列表的播放器中添加上述任一链接即可使用。
-        files: korean_tv.m3u
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
+        git push gitee main:master --force
+        echo "✅ Gitee同步完成"
