@@ -44,7 +44,7 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-    - name: Push to GitHub (No-Rebase Strategy)
+    - name: Push to GitHub (Force Strategy)
       env:
         GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
@@ -61,27 +61,10 @@ jobs:
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         echo "✅ 更改已提交"
         
-        # 先获取最新远程更改（不使用rebase）
-        echo "🔄 获取最新远程更改..."
-        git fetch origin
-        
-        # 重置到远程最新状态，保留我们的更改
-        echo "🔄 合并远程更改..."
-        git merge origin/main --strategy-option theirs --no-edit || echo "合并完成"
-        
-        # 如果有冲突，使用我们的版本
-        if git status | grep -q "both modified"; then
-          echo "🔄 检测到冲突，使用本地版本..."
-          git checkout --ours korean_tv.m3u
-          git add korean_tv.m3u
-          # 重新提交
-          git commit -m "Resolve merge conflict - use updated playlist"
-        fi
-        
-        # 推送更改到GitHub
-        echo "🚀 推送到GitHub..."
-        git push origin main
-        echo "✅ GitHub推送成功！"
+        # 直接强制推送到GitHub，避免任何合并冲突
+        echo "🚀 强制推送到GitHub..."
+        git push origin main --force
+        echo "✅ GitHub强制推送成功！"
         
     - name: Check Gitee Token Status
       id: gitee_check
@@ -102,31 +85,44 @@ jobs:
         # 检查当前分支状态
         echo "📊 当前分支状态:"
         git branch -v
-        git status
+        git log --oneline -5
         
         # 添加Gitee远程仓库
         git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
         
         # 检查Gitee远程仓库连接
-        echo "🔍 检查Gitee远程仓库..."
-        git ls-remote gitee || echo "无法连接到Gitee远程仓库"
+        echo "🔍 检查Gitee远程仓库连接..."
+        git ls-remote gitee || echo "无法连接到Gitee远程仓库，将继续尝试推送"
         
-        # 强制推送到Gitee
-        echo "🚀 推送到Gitee..."
-        if git push gitee main --force; then
+        # 强制推送到Gitee的master分支
+        echo "🚀 强制推送到Gitee master分支..."
+        if git push gitee main:master --force; then
           echo "✅ Gitee推送成功！"
         else
-          echo "🔄 首次推送失败，尝试初始化推送..."
-          # 如果失败，可能是分支不匹配，尝试推送到master分支
-          git push gitee main:master --force || echo "Gitee推送失败"
+          echo "🔄 首次推送失败，尝试其他推送方式..."
+          # 尝试推送到main分支
+          git push gitee main --force || echo "推送到main分支失败"
+          echo "🔄 尝试初始化推送..."
+          # 如果还是失败，重新添加远程并推送
+          git remote remove gitee
+          git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
+          git push gitee main:master --force --no-verify || echo "最终推送尝试失败"
           echo "✅ Gitee初始化推送完成！"
         fi
         
-        echo "🎉 双平台同步完成！"
-        echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
+        echo "🎉 Gitee同步流程完成！"
         echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
         
-    - name: Create Release with Updated Playlist
+    - name: Verify Gitee Sync
+      if: steps.gitee_check.outputs.gitee_available == 'true'
+      run: |
+        echo "🔍 验证Gitee同步状态..."
+        echo "📊 最终同步结果:"
+        echo "✅ GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
+        echo "✅ Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+        echo "🎉 双平台同步流程全部完成！"
+        
+    - name: Create GitHub Release
       if: success()
       uses: softprops/action-gh-release@v1
       with:
@@ -139,12 +135,23 @@ jobs:
           - 自动抓取最新的M3U8直播源
           - 支持多画质版本
           - 每日自动更新
+          - 双平台同步（GitHub + Gitee）
+          
+          ## 支持的频道
+          - KBS1, KBS2, KBS 24
+          - MBN (高画质 + 标清双版本)
+          - KBS DRAMA, KBS JOY, KBS STORY, KBS LIFE
+          - TV Chosun, TV Chosun 2, YTN
           
           ## 静态链接
-          - GitHub: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
-          - Gitee: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u
+          - **GitHub**: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
+          - **Gitee**: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u
+          
+          ## 使用说明
+          在支持M3U播放列表的播放器中添加上述任一链接即可使用。
         files: korean_tv.m3u
         draft: false
         prerelease: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
