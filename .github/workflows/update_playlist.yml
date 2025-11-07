@@ -4,10 +4,6 @@ on:
   schedule:
     - cron: '0 0 * * *'  # 每天UTC时间0点运行
   workflow_dispatch:      # 允许手动触发
-  push:
-    paths:
-      - 'update_playlist.py'
-      - '.github/workflows/update_playlist.yml'
 
 permissions:
   contents: write
@@ -16,70 +12,51 @@ jobs:
   update-playlist:
     runs-on: ubuntu-latest
     
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        fetch-depth: 0  # 获取完整历史记录，重要！
         
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
         
-    - name: Install Python dependencies
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4
         
-    - name: Install Chrome and ChromeDriver
+    - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
       
-    - name: Run playlist update script
+    - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+        GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
         python update_playlist.py
         
-    - name: Configure Git
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
-    - name: Check for changes and push
+    - name: Push to Gitee
+      if: always()  # 即使前面的步骤失败也尝试推送到Gitee
       env:
-        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+        GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        # 添加所有更改
+        # 设置Git身份
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        
+        # 添加Gitee远程仓库
+        git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git
+        
+        # 添加所有文件
         git add -A
         
-        # 检查是否有更改需要提交
-        if git diff --staged --quiet; then
-          echo "✅ 没有需要提交的更改"
-          exit 0
-        fi
-        
         # 提交更改
-        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有更改需要提交"
         
-        # 先拉取远程更改（使用rebase避免合并提交）
-        echo "拉取远程更改..."
-        git pull --rebase origin main
+        # 推送到Gitee
+        git push gitee main || echo "Gitee推送失败或无需推送"
         
-        # 推送更改
-        echo "推送更改到远程仓库..."
-        git push origin main
-        
-        echo "✅ 更改推送成功！"
-        
-    - name: Handle push failure
-      if: failure() && steps.push.outcome == 'failure'
-      run: |
-        echo "推送失败，尝试强制推送..."
-        git push --force-with-lease origin main
-        echo "✅ 强制推送成功！"
+        echo "✅ 同步到Gitee完成！"
