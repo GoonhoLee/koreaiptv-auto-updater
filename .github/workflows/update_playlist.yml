@@ -69,6 +69,12 @@ jobs:
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
+        # 检查Gitee Token是否设置
+        if [ -z "$GITEE_TOKEN" ]; then
+          echo "❌ GITEE_TOKEN未设置，请在GitHub Secrets中配置"
+          exit 1
+        fi
+        
         # 添加Gitee远程仓库
         git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
         
@@ -79,4 +85,4 @@ jobs:
         
         echo "🎉 双平台同步完成！"
         echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
-      echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
