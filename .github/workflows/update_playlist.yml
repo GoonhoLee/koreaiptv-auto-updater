@@ -79,4 +79,4 @@ jobs:
         
         echo "🎉 双平台同步完成！"
         echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
-        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/main/korean_tv.m3u"
+      echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
