@@ -1,4 +1,4 @@
-name: Update M3U Playlist and Sync
+name: "Update M3U Playlist and Sync"
 
 on:
   schedule:
@@ -38,99 +38,90 @@ jobs:
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
 
-    # 5. 拉取远程更改并解决冲突
+    # 5. 配置Git用户信息
+    - name: Setup Git
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+
+    # 6. 拉取远程更改并解决冲突
     - name: Pull latest changes and resolve conflicts
       env:
         GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        
         # 拉取最新更改，如有冲突优先使用远程版本
         git pull origin main --strategy-option theirs --no-edit || true
         
         # 如果有未解决的冲突，使用远程版本
         if git diff --name-only --diff-filter=U | grep -q .; then
-          echo "🔧 检测到冲突，正在解决..."
+          echo "Resolving conflicts..."
           git diff --name-only --diff-filter=U | while read file; do
-            echo "解决冲突文件: $file"
+            echo "Resolving conflict in: $file"
             git checkout --theirs "$file" || true
             git add "$file"
           done
         fi
 
-    # 6. 运行更新脚本
+    # 7. 运行更新脚本
     - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        echo "🔍 环境变量调试信息:"
-        echo "FULL_ACCESS_TOKEN 长度: ${#FULL_ACCESS_TOKEN}"
-        echo "GITEE_TOKEN 长度: ${#GITEE_TOKEN}"
+        echo "Environment variables debug:"
+        echo "FULL_ACCESS_TOKEN length: ${#FULL_ACCESS_TOKEN}"
+        echo "GITEE_TOKEN length: ${#GITEE_TOKEN}"
         
         # 运行主要的更新脚本
         python update_playlist.py
         
         # 检查是否生成了新的播放列表文件
         if [ -f "korean_tv.m3u" ]; then
-          echo "✅ M3U文件已生成"
-          echo "📊 文件信息:"
+          echo "M3U file generated successfully"
+          echo "File info:"
           ls -la korean_tv.m3u
-          echo "📝 前几行内容:"
+          echo "First few lines:"
           head -5 korean_tv.m3u
         else
-          echo "❌ M3U文件未生成"
+          echo "M3U file not generated"
           exit 1
         fi
 
-    # 7. 提交更改到GitHub
+    # 8. 提交更改到GitHub
     - name: Commit and push to GitHub
       env:
         GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        
         # 检查是否有更改
         if git status --porcelain | grep -q .; then
-          echo "📦 检测到更改，正在提交..."
+          echo "Changes detected, committing..."
           git add -A
           git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
           git push origin main
-          echo "✅ GitHub提交完成"
+          echo "GitHub commit completed"
         else
-          echo "📭 没有检测到更改，跳过提交"
+          echo "No changes detected, skipping commit"
         fi
 
-    # 8. 同步到Gitee（如果有GITEE_TOKEN）
+    # 9. 同步到Gitee（如果有GITEE_TOKEN）
     - name: Sync to Gitee
-      if: secrets.GITEE_TOKEN != ''
+      if: ${{ secrets.GITEE_TOKEN != '' }}
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        echo "🔄 开始同步到Gitee..."
+        echo "Starting sync to Gitee..."
         
         # 添加Gitee远程仓库
         git remote add gitee https://gitee.com/leegoonho/korean-tv-static.git || true
         
-        # 拉取Gitee最新更改（如果有）
-        git fetch gitee || true
-        
         # 强制推送到Gitee（确保两边同步）
         git push gitee main:master --force
         
-        echo "✅ Gitee同步完成"
-        echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
+        echo "Gitee sync completed"
 
-    # 9. 输出最终状态
+    # 10. 输出最终状态
     - name: Output status
       run: |
-        echo "🎉 自动化更新完成!"
-        echo "🔗 GitHub静态URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
-        if [ -n "${{ secrets.GITEE_TOKEN }}" ]; then
-          echo "🔗 Gitee静态URL: https://gitee.com/leegoonho/korean-tv-static/raw/master/korean_tv.m3u"
-        else
-          echo "ℹ️  Gitee同步已跳过（未设置GITEE_TOKEN）"
-        fi
-        echo "⏰ 下次自动运行时间: 明天 UTC 0 点（北京时间早上8点）"
+        echo "Automation completed!"
+        echo "GitHub URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
+        echo "Next run: Tomorrow at UTC 0:00"
