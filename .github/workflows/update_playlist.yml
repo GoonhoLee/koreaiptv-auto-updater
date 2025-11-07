@@ -65,16 +65,22 @@ jobs:
         git push origin main --force
         echo "✅ GitHub强制推送成功！"
         
+    - name: Check Gitee Token
+      id: check_gitee
+      run: |
+        if [ -n "${{ secrets.GITEE_TOKEN }}" ]; then
+          echo "Gitee Token is available"
+          echo "gitee_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "Gitee Token is not available"
+          echo "gitee_available=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Push to Gitee
+      if: steps.check_gitee.outputs.gitee_available == 'true'
       env:
         GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       run: |
-        # 检查Gitee Token是否设置
-        if [ -z "$GITEE_TOKEN" ]; then
-          echo "❌ GITEE_TOKEN未设置，请在GitHub Secrets中配置"
-          exit 1
-        fi
-        
         # 添加Gitee远程仓库
         git remote add gitee https://leegoonho:$GITEE_TOKEN@gitee.com/leegoonho/korean-tv-static.git || echo "Gitee远程已存在"
         
