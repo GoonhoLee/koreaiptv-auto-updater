@@ -555,7 +555,7 @@ def update_gitee_repository(content):
         params = {
             "access_token": GITEE_TOKEN,
             "path": "korean_tv.m3u",
-            "ref": "master"
+            "ref": "main"  # 修改这里：master -> main
         }
         
         response = requests.get(url, params=params)
@@ -575,7 +575,7 @@ def update_gitee_repository(content):
             "access_token": GITEE_TOKEN,
             "content": content_base64,
             "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "branch": "master"
+            "branch": "main"  # 修改这里：master -> main
         }
         
         if sha:
@@ -587,7 +587,7 @@ def update_gitee_repository(content):
             print("🎉 Gitee仓库更新成功!")
             
             # 打印Gitee静态URL
-            gitee_static_url = f"https://gitee.com/{GITEE_USERNAME}/{GITEE_REPO_NAME}/raw/master/korean_tv.m3u"
+            gitee_static_url = f"https://gitee.com/{GITEE_USERNAME}/{GITEE_REPO_NAME}/raw/main/korean_tv.m3u"  # 修改这里
             print(f"🔗 Gitee静态URL: {gitee_static_url}")
             return True
         else:
@@ -597,7 +597,7 @@ def update_gitee_repository(content):
     except Exception as e:
         print(f"❌ 更新Gitee仓库时出错: {str(e)}")
         return False
-
+        
 def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
     lines = ["#EXTM3U"]
