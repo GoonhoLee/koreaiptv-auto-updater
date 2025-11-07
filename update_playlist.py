@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-自动抓取韩国电视台M3U8源并更新Gist和固定仓库
+自动抓取韩国电视台M3U8源并更新Gist、GitHub仓库和Gitee仓库
 修复KBS2版本，支持MBN多画质
 """
 
@@ -21,6 +21,11 @@ STABLE_REPO_NAME = "korean-tv-static"
 GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 GITHUB_TOKEN = FULL_ACCESS_TOKEN
+
+# Gitee配置
+GITEE_USERNAME = "leegoonho"
+GITEE_REPO_NAME = "korean-tv-static"
+GITEE_TOKEN = os.getenv('GITEE_TOKEN')
 
 # 电视台配置 - KBS DRAMA、KBS JOY、KBS STORY、KBS LIFE 放在最后面
 CHANNELS = [
@@ -477,9 +482,9 @@ def update_gist(content):
         return False
 
 def update_stable_repository(content):
-    """更新固定仓库的M3U文件"""
+    """更新GitHub固定仓库的M3U文件"""
     if not GITHUB_TOKEN:
-        print("❌ 未找到GITHUB_TOKEN，跳过固定仓库更新")
+        print("❌ 未找到GITHUB_TOKEN，跳过GitHub仓库更新")
         return False
         
     # 获取文件当前SHA（需要这个来更新文件）
@@ -495,19 +500,18 @@ def update_stable_repository(content):
         sha = None
         if response.status_code == 200:
             sha = response.json().get('sha')
-            print("📁 找到现有文件，准备更新...")
+            print("📁 找到GitHub现有文件，准备更新...")
         else:
-            print("📁 未找到现有文件，将创建新文件...")
+            print("📁 GitHub未找到现有文件，将创建新文件...")
         
         # 正确的Base64编码
-        import base64
         content_bytes = content.encode('utf-8')
         content_base64 = base64.b64encode(content_bytes).decode('ascii')
         
         # 更新或创建文件
         data = {
             "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "content": content_base64,  # 使用正确的Base64编码
+            "content": content_base64,
             "committer": {
                 "name": "GitHub Action",
                 "email": "action@github.com"
@@ -520,19 +524,78 @@ def update_stable_repository(content):
         response = requests.put(url, headers=headers, json=data)
         
         if response.status_code in [200, 201]:
-            print("🎉 固定仓库更新成功!")
+            print("🎉 GitHub仓库更新成功!")
             
-            # 打印静态URL
-            static_url = f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/main/korean_tv.m3u"
-            print(f"🔗 您的静态URL是: {static_url}")
-            print("💡 请在Kodi中使用这个URL，它将自动更新!")
+            # 打印GitHub静态URL
+            github_static_url = f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/main/korean_tv.m3u"
+            print(f"🔗 GitHub静态URL: {github_static_url}")
             return True
         else:
-            print(f"❌ 固定仓库更新失败: {response.status_code} - {response.text}")
+            print(f"❌ GitHub仓库更新失败: {response.status_code} - {response.text}")
             return False
             
     except Exception as e:
-        print(f"❌ 更新固定仓库时出错: {str(e)}")
+        print(f"❌ 更新GitHub仓库时出错: {str(e)}")
+        return False
+
+def update_gitee_repository(content):
+    """更新Gitee仓库的M3U文件"""
+    if not GITEE_TOKEN:
+        print("❌ 未找到GITEE_TOKEN，跳过Gitee仓库更新")
+        return False
+        
+    # Gitee API URL
+    url = f"https://gitee.com/api/v5/repos/{GITEE_USERNAME}/{GITEE_REPO_NAME}/contents/korean_tv.m3u"
+    headers = {
+        "Content-Type": "application/json;charset=UTF-8"
+    }
+    
+    try:
+        # 首先获取文件当前信息
+        params = {
+            "access_token": GITEE_TOKEN,
+            "path": "korean_tv.m3u",
+            "ref": "master"
+        }
+        
+        response = requests.get(url, params=params)
+        sha = None
+        if response.status_code == 200:
+            sha = response.json().get('sha')
+            print("📁 找到Gitee现有文件，准备更新...")
+        else:
+            print("📁 Gitee未找到现有文件，将创建新文件...")
+        
+        # Base64编码
+        content_bytes = content.encode('utf-8')
+        content_base64 = base64.b64encode(content_bytes).decode('ascii')
+        
+        # 更新或创建文件
+        data = {
+            "access_token": GITEE_TOKEN,
+            "content": content_base64,
+            "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "branch": "master"
+        }
+        
+        if sha:
+            data["sha"] = sha
+        
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code in [200, 201]:
+            print("🎉 Gitee仓库更新成功!")
+            
+            # 打印Gitee静态URL
+            gitee_static_url = f"https://gitee.com/{GITEE_USERNAME}/{GITEE_REPO_NAME}/raw/master/korean_tv.m3u"
+            print(f"🔗 Gitee静态URL: {gitee_static_url}")
+            return True
+        else:
+            print(f"❌ Gitee仓库更新失败: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ 更新Gitee仓库时出错: {str(e)}")
         return False
 
 def generate_playlist(dynamic_channels):
@@ -601,8 +664,11 @@ def main():
         # 更新Gist
         update_gist(playlist_content)
         
-        # 更新固定仓库
+        # 更新GitHub仓库
         update_stable_repository(playlist_content)
+        
+        # 更新Gitee仓库
+        update_gitee_repository(playlist_content)
         
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
