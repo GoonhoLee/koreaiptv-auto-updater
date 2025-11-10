@@ -442,13 +442,13 @@ def get_mbn_m3u8_multiple_quality(driver):
 
 def update_gist(content):
     """更新Gist内容"""
-    if not GITHUB_TOKEN:
-        print("❌ 未找到GITHUB_TOKEN，跳过Gist更新")
+    if not FULL_ACCESS_TOKEN:
+        print("❌ 未找到FULL_ACCESS_TOKEN，跳过Gist更新")
         return False
         
     url = f"https://api.github.com/gists/{GIST_ID}"
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"token {FULL_ACCESS_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
@@ -477,14 +477,14 @@ def update_gist(content):
 
 def update_stable_repository(content):
     """更新GitHub固定仓库的M3U文件"""
-    if not GITHUB_TOKEN:
-        print("❌ 未找到GITHUB_TOKEN，跳过GitHub仓库更新")
+    if not FULL_ACCESS_TOKEN:
+        print("❌ 未找到FULL_ACCESS_TOKEN，跳过GitHub仓库更新")
         return False
         
     # 获取文件当前SHA（需要这个来更新文件）
     url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv.m3u"
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"token {FULL_ACCESS_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
