@@ -2,11 +2,11 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 0 */2 * *'
-  workflow_dispatch:
+    - cron: '0 0 */2 * *'  # 每2天UTC时间0点运行一次
+  workflow_dispatch:        # 支持手动触发
   push:
     paths:
-      - 'update_playlist.py'
+      - 'update_playlist.py'  # 脚本更新时也触发
 
 permissions:
   contents: write
@@ -14,54 +14,69 @@ permissions:
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 30  # 设置超时时间
     
     steps:
+    # 1. 检出代码
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.FULL_ACCESS_TOKEN }}
 
+    # 2. 设置Python环境
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
+    # 3. 安装依赖
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4
 
-    # 使用专门的ChromeDriver Action（推荐方案）
-    - name: Setup Chrome and ChromeDriver
-      uses: nanasess/setup-chromedriver@v2
+    # 4. 安装Chrome浏览器和ChromeDriver
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1
+      
+    - name: Install ChromeDriver
+      run: |
+        CHROME_VERSION=$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
+        wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+        unzip -o chromedriver_linux64.zip -d /usr/local/bin/
+        chmod +x /usr/local/bin/chromedriver
 
+    # 5. 验证安装
     - name: Verify installations
       run: |
-        echo "Python version:"
         python --version
-        echo "Chrome version:"
         google-chrome --version
-        echo "ChromeDriver version:"
         chromedriver --version
 
+    # 6. 运行更新脚本
     - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
         python update_playlist.py
 
+    # 7. 提交并推送到GitHub
     - name: Commit and push changes
       run: |
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         git add -A
+        # 检查是否有变更需要提交
         if git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
         else
           git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
+          git push origin main
           echo "✅ 变更已提交"
         fi
 
+    # 8. 上传播放列表作为制品
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
       with:
@@ -69,7 +84,10 @@ jobs:
         path: korean_tv.m3u
         retention-days: 7
 
+    # 9. 输出最终状态
     - name: Output status
       run: |
         echo "✅ 自动化更新完成!"
+        echo "🔗 GitHub播放列表链接: https://raw.githubusercontent.com/${{ github.repository }}/main/korean_tv.m3u"
         echo "⏰ 下次自动运行: 2天后 UTC 0:00"
+        echo "📊 工作流详情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
