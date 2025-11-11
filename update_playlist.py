@@ -106,22 +106,7 @@ STATIC_CHANNELS = [
     'https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천',
-    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8',
-    '',
-    '#EXTINF:-1 tvg-id="SPOTV.kr" group-title="🐉한국방송🦆",SPOTV',
-    'https://live-edge-th136.myjktv.com:443/watch/live.m3u8?video=spotv_540&sid=w9sTaDbkcNRJ1Op6LvowKsB9qiIwEXaLK6jQmc9a&secret=700a37478a2572879ff8a64e7e43faa9&time=1742501358',
-    '',
-    '#EXTINF:-1 tvg-id="SPOTV2.kr" group-title="🐉한국방송🦆",SPOTV2',
-    'https://live-edge-th136.myjktv.com:443/watch/live.m3u8?video=spotv_2_540&sid=JCn330xSXpDUtieRguQzRx0q5D2azRNty2G69TqK&secret=a8bf52caed9a7411a14c3dbcaf4f70b4&time=1742501441',
-    '',
-    '#EXTINF:-1 tvg-id="SPOTVPrimePlus.kr" group-title="🐉한국방송🦆",SPOTV Prime+',
-    'https://live-edge-th136.myjktv.com:443/watch/live.m3u8?video=spotv_prime_540&sid=V1R87ydx8jeZbnselXMKDBx9IPKMXNa5Zv7Iqv31&secret=79ee49d5533da8320bdd61ec92cd4ded&time=1742501589',
-    '',
-    '#EXTINF:-1 tvg-id="SPOTVPrime.kr" group-title="🐉한국방송🦆",SPOTV Prime',
-    'https://live-edge-th136.myjktv.com:443/watch/live.m3u8?video=spotv_on_540&sid=khuvDUGA5oq5SVN9qUTdlNpFKsr85NI7poL0OHU7&secret=4b9ae05ec416ae0275d3cee4511e7f7b&time=1742501659',
-    '',
-    '#EXTINF:-1 tvg-id="JTBC.kr" group-title="🐉한국방송🦆",JTBC',
-    'https://live-edge-th136.myjktv.com:443/watch/live.m3u8?video=jtbc_540&sid=ueRIPcU1CmpLxvesJU3p3VVgAfWDA7Gq6Ok1SwdS&secret=7e0fd7ca14ec47bd96aca368dade12a4&time=1742499897'
+    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
 
 def setup_driver():
