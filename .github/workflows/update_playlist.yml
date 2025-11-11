@@ -35,17 +35,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4
 
-    # 4. 安装Chrome浏览器和ChromeDriver
-    - name: Install Chrome
+    # 4. 安装Chrome和ChromeDriver（修复版）
+    - name: Install Chrome and ChromeDriver
       uses: browser-actions/setup-chrome@v1
-      
-    - name: Install ChromeDriver
-      run: |
-        CHROME_VERSION=$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-        wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-        unzip -o chromedriver_linux64.zip -d /usr/local/bin/
-        chmod +x /usr/local/bin/chromedriver
+      with:
+        install-chromedriver: true
 
     # 5. 验证安装
     - name: Verify installations
