@@ -1,11 +1,12 @@
-name: "Update M3U Playlist"
+name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 0 */2 * *'  # 每2天UTC时间0点运行一次
-  workflow_dispatch:      # 支持手动触发
+    - cron: '0 0 */2 * *'
+  workflow_dispatch:
   push:
-    branches: [ main ]
+    paths:
+      - 'update_playlist.py'
 
 permissions:
   contents: write
@@ -13,97 +14,49 @@ permissions:
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
-    # 1. 检出代码（使用有权限的token）
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        fetch-depth: 0
 
-    # 2. 设置Python环境
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
-    # 3. 安装依赖
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4 webdriver-manager
 
-    # 4. 安装Chrome浏览器
-    - name: Install Chrome
-      uses: browser-actions/setup-chrome@v1
+    # 注意：这里完全跳过ChromeDriver手动安装！
+    # Selenium + webdriver-manager 会自动处理
 
-    # 5. 配置Git用户信息
-    - name: Setup Git
-      run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-
-    # 6. 拉取远程更改并解决冲突
-    - name: Pull latest changes and resolve conflicts
-      env:
-        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
-      run: |
-        # 拉取最新更改，如有冲突优先使用远程版本
-        git pull origin main --strategy-option theirs --no-edit || true
-        
-        # 如果有未解决的冲突，使用远程版本
-        if git diff --name-only --diff-filter=U | grep -q .; then
-          echo "Resolving conflicts..."
-          git diff --name-only --diff-filter=U | while read file; do
-            echo "Resolving conflict in: $file"
-            git checkout --theirs "$file" || true
-            git add "$file"
-          done
-        fi
-
-    # 7. 运行更新脚本
     - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        echo "Environment variables debug:"
-        echo "FULL_ACCESS_TOKEN length: ${#FULL_ACCESS_TOKEN}"
-        
-        # 运行主要的更新脚本
         python update_playlist.py
-        
-        # 检查是否生成了新的播放列表文件
-        if [ -f "korean_tv.m3u" ]; then
-          echo "M3U file generated successfully"
-          echo "File info:"
-          ls -la korean_tv.m3u
-          echo "First few lines:"
-          head -5 korean_tv.m3u
-        else
-          echo "M3U file not generated"
-          exit 1
-        fi
 
-    # 8. 提交更改到GitHub
-    - name: Commit and push to GitHub
-      env:
-        GH_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
+    - name: Commit and push changes
       run: |
-        # 检查是否有更改
-        if git status --porcelain | grep -q .; then
-          echo "Changes detected, committing..."
-          git add -A
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git add -A
+        if git diff --staged --quiet; then
+          echo "📝 没有检测到文件变更，跳过提交"
+        else
           git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
           git push origin main
-          echo "GitHub commit completed"
-        else
-          echo "No changes detected, skipping commit"
+          echo "✅ 变更已提交"
         fi
 
-    # 9. 输出最终状态
-    - name: Output status
-      run: |
-        echo "Automation completed!"
-        echo "GitHub URL: https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
-        echo "Next run: Tomorrow at UTC 0:00"
+    - name: Upload playlist as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: korean-tv-playlist
+        path: korean_tv.m3u
+        retention-days: 7
