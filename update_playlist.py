@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-修复KBS2版本，支持MBN多画质 - 中国优化版
+修复KBS2版本，支持MBN多画质
 """
 
 import requests
@@ -107,12 +107,6 @@ STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천',
     'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
-
-# 中国优化配置
-CDN_PROVIDERS = {
-    'cors_proxy': 'https://corsproxy.io/?',
-    'allorigins': 'https://api.allorigins.win/raw?url=',
-}
 
 def setup_driver():
     """设置Chrome驱动 - 使用webdriver-manager自动管理驱动版本"""
@@ -487,37 +481,6 @@ def get_mbn_m3u8_multiple_quality(driver):
             }
         ]
 
-def optimize_url_for_china(original_url):
-    """
-    为中国地区优化URL
-    添加CDN加速或代理
-    """
-    optimized_urls = []
-    
-    # 原始URL（保持原样）
-    optimized_urls.append({
-        'url': original_url,
-        'name': '原始线路',
-        'priority': 1
-    })
-    
-    # 如果URL是m3u8格式，尝试添加代理前缀
-    if '.m3u8' in original_url:
-        # 使用公共CORS代理
-        proxy_services = [
-            f"https://corsproxy.io/?{original_url}",
-            f"https://api.allorigins.win/raw?url={original_url}",
-        ]
-        
-        for proxy_url in proxy_services:
-            optimized_urls.append({
-                'url': proxy_url,
-                'name': '代理线路',
-                'priority': 2
-            })
-    
-    return optimized_urls
-
 def update_stable_repository(content):
     """更新GitHub固定仓库的M3U文件"""
     if not FULL_ACCESS_TOKEN:
@@ -577,51 +540,6 @@ def update_stable_repository(content):
         print(f"🔍 详细错误信息: {traceback.format_exc()}")
         return False
 
-def update_stable_repository_optimized(content):
-    """上传优化版到GitHub"""
-    if not FULL_ACCESS_TOKEN:
-        return False
-        
-    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv_china_optimized.m3u"
-    headers = {
-        "Authorization": f"token {FULL_ACCESS_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    
-    try:
-        # 获取现有文件SHA
-        response = requests.get(url, headers=headers)
-        sha = response.json().get('sha') if response.status_code == 200 else None
-        
-        # 编码内容
-        content_bytes = content.encode('utf-8')
-        content_base64 = base64.b64encode(content_bytes).decode('ascii')
-        
-        data = {
-            "message": f"中国优化版播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "content": content_base64,
-            "committer": {
-                "name": "GitHub Action",
-                "email": "action@github.com"
-            }
-        }
-        
-        if sha:
-            data["sha"] = sha
-        
-        response = requests.put(url, headers=headers, json=data)
-        
-        if response.status_code in [200, 201]:
-            print("🎉 中国优化版上传成功!")
-            return True
-        else:
-            print(f"❌ 优化版上传失败: {response.status_code}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ 上传优化版时出错: {str(e)}")
-        return False
-        
 def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
     lines = ["#EXTM3U"]
@@ -651,68 +569,6 @@ def generate_playlist(dynamic_channels):
     
     return "\n".join(lines)
 
-def generate_china_optimized_playlist(dynamic_channels):
-    """生成中国地区优化的播放列表"""
-    lines = ["#EXTM3U"]
-    lines.append(f"# 中国优化版 - 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append("# 提供多条线路以适应不同网络环境")
-    lines.append("# 如果主线路无法播放，请尝试代理线路")
-    lines.append("")
-    
-    # 添加优化说明
-    lines.append("#EXTINF:-1,=== 韩国电视台 (中国优化版) ===")
-    lines.append("#EXTVLCOPT:network-caching=1000")
-    lines.append("#EXTVLCOPT:http-reconnect=true")
-    lines.append("")
-    
-    # 分离出要放在后面的频道
-    later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
-    
-    # 先添加其他动态频道（多线路版本）
-    for channel in dynamic_channels:
-        if channel.get('url') and channel['name'] not in later_channels:
-            # 为每个频道提供多个线路
-            optimized_urls = optimize_url_for_china(channel['url'])
-            
-            # 主线路
-            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
-            lines.append(channel['url'])
-            lines.append("")
-            
-            # 备用线路（使用代理）
-            for i, url_info in enumerate(optimized_urls[1:], 1):  # 跳过第一个原始URL
-                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
-                lines.append(url_info['url'])
-                lines.append("")
-    
-    # 添加静态频道
-    lines.extend(STATIC_CHANNELS)
-    lines.append("")
-    
-    # 最后添加指定的KBS频道（多线路版本）
-    for channel in dynamic_channels:
-        if channel.get('url') and channel['name'] in later_channels:
-            optimized_urls = optimize_url_for_china(channel['url'])
-            
-            # 主线路
-            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
-            lines.append(channel['url'])
-            lines.append("")
-            
-            # 备用线路
-            for i, url_info in enumerate(optimized_urls[1:], 1):
-                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
-                lines.append(url_info['url'])
-                lines.append("")
-    
-    # 添加播放器优化建议
-    lines.append("#EXTINF:-1,=== 播放器设置建议 ===")
-    lines.append("# 建议使用VLC、PotPlayer或IINA播放器")
-    lines.append("# 设置网络缓存为1000-3000ms以获得更流畅体验")
-    lines.append("# 如遇卡顿，请切换到代理线路")
-    
-    return "\n".join(lines)
-
 def main():
     """主函数"""
     start_time = time.time()
@@ -726,48 +582,44 @@ def main():
         
         # 遍历所有频道进行抓取
         for channel in CHANNELS:
-            if "MBN" in channel['name']:
+            print(f"🔍 正在处理频道: {channel['name']}")
+            
+            if channel['name'] == "MBN":  # 精确匹配而不是包含匹配
                 # MBN特殊处理 - 多画质版本
                 mbn_channels = get_mbn_m3u8_multiple_quality(driver)
                 dynamic_channels.extend(mbn_channels)
                 print(f"✅ {channel['name']} - 获取成功（双画质）")
+                continue  # 添加这行，跳过MBN的常规处理
             else:
                 # KBS频道统一处理
-                m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'])
-                if m3u8_url:
-                    dynamic_channels.append({
-                        'name': channel['name'],
-                        'tvg_id': channel['tvg_id'],
-                        'url': m3u8_url
-                    })
-                    print(f"✅ {channel['name']} - 获取成功")
-                else:
-                    print(f"❌ {channel['name']} - 获取失败")
+                try:
+                    m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'])
+                    if m3u8_url:
+                        dynamic_channels.append({
+                            'name': channel['name'],
+                            'tvg_id': channel['tvg_id'],
+                            'url': m3u8_url
+                        })
+                        print(f"✅ {channel['name']} - 获取成功")
+                    else:
+                        print(f"❌ {channel['name']} - 获取失败")
+                except Exception as e:
+                    print(f"❌ 处理频道 {channel['name']} 时出错: {str(e)}")
+                    continue  # 跳过出错的频道继续处理下一个
         
         # 生成标准版播放列表
         standard_playlist = generate_playlist(dynamic_channels)
-
-        # 生成中国优化版播放列表
-        china_optimized_playlist = generate_china_optimized_playlist(dynamic_channels)
-
         print("✅ 播放列表生成完成!")
 
         # 更新GitHub仓库
         update_stable_repository(standard_playlist)
 
-        # 上传中国优化版
-        update_stable_repository_optimized(china_optimized_playlist)
-
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
             f.write(standard_playlist)
 
-        with open('korean_tv_china_optimized.m3u', 'w', encoding='utf-8') as f:
-            f.write(china_optimized_playlist)
-
         print("💾 播放列表已保存:")
         print("  📁 korean_tv.m3u - 标准版")
-        print("  📁 korean_tv_china_optimized.m3u - 中国优化版")
         
         # 打印统计
         successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
