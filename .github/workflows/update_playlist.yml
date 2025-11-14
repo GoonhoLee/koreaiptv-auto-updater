@@ -44,15 +44,6 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 完全重置到远程最新版本（关键步骤）
-        echo "🔄 重置到远程最新版本..."
-        git fetch origin
-        git reset --hard origin/main
-        
-        # 重新运行更新脚本
-        echo "🔄 重新生成播放列表..."
-        python update_playlist.py
-        
         # 检查是否有更改
         if git diff --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
@@ -64,9 +55,9 @@ jobs:
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
-        # 强制推送（避免所有合并问题）
-        echo "🚀 强制推送更改..."
-        git push origin main --force
+        # 推送更改
+        echo "🚀 推送更改..."
+        git push origin main
         echo "✅ 变更已提交"
 
     - name: Upload playlist as artifact
