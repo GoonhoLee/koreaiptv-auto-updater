@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-修复KBS2版本，支持MBN多画质
+修复KBS2版本，支持MBN多画质 - 中国优化版
 """
 
 import requests
@@ -66,6 +66,28 @@ CHANNELS = [
         "tvg_id": "KBSLIFE.kr"
     }
 ]
+
+# 中国优化配置
+CDN_PROVIDERS = {
+    'cors_proxy': 'https://corsproxy.io/?',
+    'allorigins': 'https://api.allorigins.win/raw?url=',
+}
+
+# 备用线路配置
+BACKUP_STREAMS = {
+    'KBS1': [
+        'https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8',
+        'https://stream-1.kbs.co.kr/hls/kbs1/index.m3u8'
+    ],
+    'KBS2': [
+        'https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8', 
+        'https://stream-2.kbs.co.kr/hls/kbs2/index.m3u8'
+    ],
+    'MBN': [
+        'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
+        'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8'
+    ]
+}
 
 # 静态频道列表 - 删除EBS1和EBS2
 STATIC_CHANNELS = [
@@ -475,6 +497,70 @@ def get_mbn_m3u8_multiple_quality(driver):
             }
         ]
 
+def optimize_url_for_china(original_url):
+    """
+    为中国地区优化URL
+    添加CDN加速或代理
+    """
+    optimized_urls = []
+    
+    # 原始URL（保持原样）
+    optimized_urls.append({
+        'url': original_url,
+        'name': '原始线路',
+        'priority': 1
+    })
+    
+    # 如果URL是m3u8格式，尝试添加代理前缀
+    if '.m3u8' in original_url:
+        # 使用公共CORS代理（提高可访问性）
+        proxy_services = [
+            f"https://corsproxy.io/?{original_url}",
+            f"https://api.allorigins.win/raw?url={original_url}",
+        ]
+        
+        for proxy_url in proxy_services:
+            optimized_urls.append({
+                'url': proxy_url,
+                'name': '代理线路',
+                'priority': 2
+            })
+    
+    return optimized_urls
+
+def test_url_speed(url, timeout=5):
+    """测试URL访问速度"""
+    try:
+        start_time = time.time()
+        response = requests.head(url, timeout=timeout, allow_redirects=True)
+        end_time = time.time()
+        
+        if response.status_code == 200:
+            return end_time - start_time
+        else:
+            return None
+    except:
+        return None
+
+def get_fastest_url(urls):
+    """获取最快的URL"""
+    fastest_url = urls[0]  # 默认使用第一个
+    fastest_time = float('inf')
+    
+    print("🚀 测试线路速度...")
+    for url_info in urls:
+        speed = test_url_speed(url_info['url'])
+        if speed is not None:
+            print(f"  ⏱️ {url_info['name']}: {speed:.2f}秒")
+            if speed < fastest_time:
+                fastest_time = speed
+                fastest_url = url_info
+        else:
+            print(f"  ❌ {url_info['name']}: 无法访问")
+    
+    print(f"✅ 选择最快线路: {fastest_url['name']}")
+    return fastest_url['url']
+
 def update_stable_repository(content):
     """更新GitHub固定仓库的M3U文件"""
     if not FULL_ACCESS_TOKEN:
@@ -533,6 +619,56 @@ def update_stable_repository(content):
         import traceback
         print(f"🔍 详细错误信息: {traceback.format_exc()}")
         return False
+
+def update_stable_repository_optimized(content):
+    """上传中国优化版到GitHub"""
+    if not FULL_ACCESS_TOKEN:
+        print("❌ 未找到FULL_ACCESS_TOKEN，跳过优化版上传")
+        return False
+        
+    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv_china_optimized.m3u"
+    headers = {
+        "Authorization": f"token {FULL_ACCESS_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    try:
+        # 获取现有文件SHA
+        response = requests.get(url, headers=headers)
+        sha = response.json().get('sha') if response.status_code == 200 else None
+        
+        # 编码内容
+        content_bytes = content.encode('utf-8')
+        content_base64 = base64.b64encode(content_bytes).decode('ascii')
+        
+        data = {
+            "message": f"中国优化版播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "content": content_base64,
+            "committer": {
+                "name": "GitHub Action",
+                "email": "action@github.com"
+            }
+        }
+        
+        if sha:
+            data["sha"] = sha
+        
+        response = requests.put(url, headers=headers, json=data)
+        
+        if response.status_code in [200, 201]:
+            print("🎉 中国优化版上传成功!")
+            
+            # 打印优化版URL
+            optimized_url = f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/main/korean_tv_china_optimized.m3u"
+            print(f"🔗 中国优化版URL: {optimized_url}")
+            return True
+        else:
+            print(f"❌ 优化版上传失败: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ 上传优化版时出错: {str(e)}")
+        return False
         
 def generate_playlist(dynamic_channels):
     """生成完整的M3U播放列表"""
@@ -560,6 +696,68 @@ def generate_playlist(dynamic_channels):
             lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
             lines.append(channel['url'])
             lines.append("")
+    
+    return "\n".join(lines)
+
+def generate_china_optimized_playlist(dynamic_channels):
+    """生成中国地区优化的播放列表"""
+    lines = ["#EXTM3U"]
+    lines.append(f"# 中国优化版 - 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("# 提供多条线路以适应不同网络环境")
+    lines.append("# 如果主线路无法播放，请尝试代理线路")
+    lines.append("")
+    
+    # 添加优化说明
+    lines.append("#EXTINF:-1,=== 韩国电视台 (中国优化版) ===")
+    lines.append("#EXTVLCOPT:network-caching=1000")
+    lines.append("#EXTVLCOPT:http-reconnect=true")
+    lines.append("")
+    
+    # 分离出要放在后面的频道
+    later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
+    
+    # 先添加其他动态频道（多线路版本）
+    for channel in dynamic_channels:
+        if channel.get('url') and channel['name'] not in later_channels:
+            # 为每个频道提供多个线路
+            optimized_urls = optimize_url_for_china(channel['url'])
+            
+            # 主线路
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
+            lines.append(channel['url'])
+            lines.append("")
+            
+            # 备用线路（使用代理）
+            for i, url_info in enumerate(optimized_urls[1:], 1):  # 跳过第一个原始URL
+                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
+                lines.append(url_info['url'])
+                lines.append("")
+    
+    # 添加静态频道
+    lines.extend(STATIC_CHANNELS)
+    lines.append("")
+    
+    # 最后添加指定的KBS频道（多线路版本）
+    for channel in dynamic_channels:
+        if channel.get('url') and channel['name'] in later_channels:
+            optimized_urls = optimize_url_for_china(channel['url'])
+            
+            # 主线路
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
+            lines.append(channel['url'])
+            lines.append("")
+            
+            # 备用线路
+            for i, url_info in enumerate(optimized_urls[1:], 1):
+                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
+                lines.append(url_info['url'])
+                lines.append("")
+    
+    # 添加播放器优化建议
+    lines.append("#EXTINF:-1,=== 播放器设置建议 ===")
+    lines.append("# 建议使用VLC、PotPlayer或IINA播放器")
+    lines.append("# 设置网络缓存为1000-3000ms以获得更流畅体验")
+    lines.append("# 如遇卡顿，请切换到代理线路")
     
     return "\n".join(lines)
 
@@ -594,17 +792,30 @@ def main():
                 else:
                     print(f"❌ {channel['name']} - 获取失败")
         
-        # 生成播放列表
-        playlist_content = generate_playlist(dynamic_channels)
+        # 生成标准版播放列表
+        standard_playlist = generate_playlist(dynamic_channels)
+
+        # 生成中国优化版播放列表
+        china_optimized_playlist = generate_china_optimized_playlist(dynamic_channels)
+
         print("✅ 播放列表生成完成!")
-        
+
         # 更新GitHub仓库
-        update_stable_repository(playlist_content)
-        
+        update_stable_repository(standard_playlist)
+
+        # 上传中国优化版
+        update_stable_repository_optimized(china_optimized_playlist)
+
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
-            f.write(playlist_content)
-        print("💾 播放列表已保存到 korean_tv.m3u")
+            f.write(standard_playlist)
+
+        with open('korean_tv_china_optimized.m3u', 'w', encoding='utf-8') as f:
+            f.write(china_optimized_playlist)
+
+        print("💾 播放列表已保存:")
+        print("  📁 korean_tv.m3u - 标准版")
+        print("  📁 korean_tv_china_optimized.m3u - 中国优化版")
         
         # 打印统计
         successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
