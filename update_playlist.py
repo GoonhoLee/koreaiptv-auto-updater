@@ -224,6 +224,7 @@ def get_kbs_m3u8(driver, url, channel_name):
                 return generate_kbs_auth_url(base_url, channel_name)
             elif "24" in channel_name:
                 return "https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8"
+            # 需要添加对later_channels的支持：
             elif "DRAMA" in channel_name:
                 return "https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8"
             elif "JOY" in channel_name:
