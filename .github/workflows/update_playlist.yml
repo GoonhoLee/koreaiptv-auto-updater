@@ -2,7 +2,7 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
+    - cron: '0 19 * * *'  # 每天UTC时间19:00运行，对应中国时间次日03:00
   workflow_dispatch:
   push:
     paths:
@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        # 重要：移除 fetch-depth: 0
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -33,41 +33,41 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4 webdriver-manager
 
-    - name: Configure Git
-      run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-
-    - name: Update playlist without conflicts
+    - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        echo "🔄 开始无冲突更新流程..."
+        python update_playlist.py
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
         
-        # 关键步骤1：先拉取最新代码
-        echo "📥 拉取最新远程代码..."
-        git pull origin main
+        # 完全重置到远程最新版本（关键步骤）
+        echo "🔄 重置到远程最新版本..."
+        git fetch origin
+        git reset --hard origin/main
         
-        # 关键步骤2：基于最新代码生成播放列表
-        echo "🎬 生成最新播放列表..."
+        # 重新运行更新脚本
+        echo "🔄 重新生成播放列表..."
         python update_playlist.py
         
-        # 关键步骤3：检查是否有实质性变化
-        echo "🔍 检查文件变化..."
-        if git diff --quiet korean_tv.m3u korean_tv_china_optimized.m3u; then
-          echo "📝 播放列表内容无变化，跳过提交"
+        # 检查是否有更改
+        if git diff --quiet; then
+          echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
         
-        # 关键步骤4：提交并推送
+        # 提交更改
         echo "💾 提交更改..."
-        git add korean_tv.m3u korean_tv_china_optimized.m3u
+        git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
-        echo "🚀 推送更新..."
-        git push origin main
-        
-        echo "✅ 无冲突更新完成！"
+        # 强制推送（避免所有合并问题）
+        echo "🚀 强制推送更改..."
+        git push origin main --force
+        echo "✅ 变更已提交"
 
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
