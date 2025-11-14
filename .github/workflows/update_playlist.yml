@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        fetch-depth: 0  # 获取所有历史记录
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -44,20 +44,20 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 先检查是否有更改
+        # 先拉取最新更改，使用合并方式
+        echo "🔄 拉取远程最新更改..."
+        git pull origin main --no-rebase
+        
+        # 检查是否有更改
         if git diff --quiet && git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
         
-        # 如果有更改，先暂存并提交本地更改
-        echo "💾 暂存并提交本地更改..."
+        # 提交更改
+        echo "💾 提交本地更改..."
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-        
-        # 拉取远程更改并处理可能的冲突
-        echo "🔄 拉取远程更改..."
-        git pull origin main --rebase --allow-unrelated-histories
         
         # 推送更改
         echo "🚀 推送更改到远程仓库..."
@@ -67,6 +67,8 @@ jobs:
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: korean-tv-playlist
-        path: korean_tv.m3u
+        name: korean-tv-playlists
+        path: |
+          korean_tv.m3u
+          korean_tv_china_optimized.m3u
         retention-days: 7
