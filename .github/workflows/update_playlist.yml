@@ -2,7 +2,7 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 0 */2 * *'
+    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
   workflow_dispatch:
   push:
     paths:
