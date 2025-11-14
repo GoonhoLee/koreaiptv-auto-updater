@@ -28,6 +28,11 @@ jobs:
       with:
         python-version: '3.9'
 
+    - name: Install Chrome browser
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -44,8 +49,12 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
+        # 拉取最新变更并自动合并
+        echo "🔄 同步远程仓库..."
+        git pull origin main --rebase --autostash
+        
         # 检查是否有更改
-        if git diff --quiet; then
+        if git diff --quiet && git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
