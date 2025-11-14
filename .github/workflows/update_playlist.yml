@@ -2,7 +2,7 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 19 * * *'  # 每天UTC时间19:00运行，对应中国时间次日03:00
+    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
   workflow_dispatch:
   push:
     paths:
@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
-        fetch-depth: 0
+        # 移除 fetch-depth: 0，使用默认设置
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -44,37 +44,35 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
 
-    - name: Smart commit and push
+    - name: Smart commit without conflicts
       run: |
-        # 策略：总是使用最新生成的播放列表，忽略合并冲突
-        echo "🔄 采用智能提交策略..."
+        echo "🔄 开始智能提交流程..."
         
-        # 拉取最新远程更改（但不用合并）
-        git fetch origin
+        # 首先拉取最新的远程更改
+        echo "📥 拉取最新远程更改..."
+        git pull origin main
         
-        # 重置到远程最新版本（完全覆盖本地）
-        git reset --hard origin/main
-        
-        # 重新运行更新脚本，基于最新的代码
-        echo "🔄 基于最新代码重新生成播放列表..."
+        # 重新生成播放列表（基于最新代码）
+        echo "🔄 重新生成播放列表..."
         python update_playlist.py
         
-        # 检查是否有实际内容变化
-        if git diff --quiet; then
-          echo "📝 没有检测到实际内容变化，跳过提交"
+        # 检查是否有实际内容变化（忽略时间戳）
+        echo "🔍 检查内容变化..."
+        if git diff --ignore-all-space --quiet korean_tv.m3u korean_tv_china_optimized.m3u; then
+          echo "📝 播放列表内容无实质变化，跳过提交"
           exit 0
         fi
         
         # 提交更改
         echo "💾 提交播放列表更新..."
-        git add -A
+        git add korean_tv.m3u korean_tv_china_optimized.m3u
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
         # 推送更改
         echo "🚀 推送更新..."
         git push origin main
         
-        echo "✅ 播放列表更新完成"
+        echo "✅ 播放列表更新完成！"
 
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
