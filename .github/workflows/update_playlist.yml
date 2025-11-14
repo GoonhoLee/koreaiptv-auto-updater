@@ -44,24 +44,33 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 先拉取最新更改，使用合并方式
-        echo "🔄 拉取远程最新更改..."
-        git pull origin main --no-rebase
+        # 完全重置工作区到远程最新状态
+        echo "🔄 重置到远程最新状态..."
+        git fetch origin main
+        git reset --hard origin/main
         
-        # 检查是否有更改
-        if git diff --quiet && git diff --staged --quiet; then
+        # 删除现有播放列表文件，确保重新生成
+        echo "🗑️ 清理旧播放列表..."
+        rm -f korean_tv.m3u korean_tv_china_optimized.m3u
+        
+        # 重新生成播放列表
+        echo "🔄 重新生成播放列表..."
+        python update_playlist.py
+        
+        # 检查是否有实际更改
+        if git diff --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
         
         # 提交更改
-        echo "💾 提交本地更改..."
+        echo "💾 提交更改..."
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
-        # 推送更改
-        echo "🚀 推送更改到远程仓库..."
-        git push origin main
+        # 强制推送（避免所有合并问题）
+        echo "🚀 强制推送更改..."
+        git push origin main --force
         echo "✅ 变更已提交"
 
     - name: Upload playlist as artifact
