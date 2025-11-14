@@ -44,20 +44,16 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 完全重置工作区到远程最新状态
-        echo "🔄 重置到远程最新状态..."
-        git fetch origin main
+        # 完全重置到远程最新版本
+        echo "🔄 重置到远程最新版本..."
+        git fetch origin
         git reset --hard origin/main
         
-        # 删除现有播放列表文件，确保重新生成
-        echo "🗑️ 清理旧播放列表..."
-        rm -f korean_tv.m3u korean_tv_china_optimized.m3u
-        
-        # 重新生成播放列表
+        # 重新运行更新脚本
         echo "🔄 重新生成播放列表..."
         python update_playlist.py
         
-        # 检查是否有实际更改
+        # 检查是否有更改
         if git diff --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
