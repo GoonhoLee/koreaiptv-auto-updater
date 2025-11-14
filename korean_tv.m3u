@@ -1,4 +1,5 @@
 #EXTM3U
+<<<<<<< Updated upstream
 # 自动生成时间: 2025-11-14 16:24:33
 
 #EXTINF:-1 tvg-id="KBS1.kr",KBS1
@@ -15,6 +16,24 @@ https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQ
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
 https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIyMzc2MH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=2RTS32iNich02~Ig4SrMAROOVwGvR7muoXQ8QGz5dy6plw79m8NXQCyhBBPbOhj7Xp6pj7041JEqfROq-yikM7Bu0hkX0WzGBny05nCDJ7hKkG2~Uz~iUHzB5des20PeHE8yQxRPXS5j2zTUZ3uO9V5r12x5gRzdjGQf34~MG5o_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+=======
+# 自动生成时间: 2025-11-14 16:36:06
+
+#EXTINF:-1 tvg-id="KBS1.kr",KBS1
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\?Expires=1762427233&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjI0MjcyMzN9fX1dfQ__&Signature=GBVxDBAnqoytflq9N1p5-qB0B8rGgiEpIjbXpi-Qc-L0g6MpVM13iQxNYC1v6aaDFJdFV2uAr9NC47IEMUibPkiBWSmhbcbxkN2SZOb0O6A9Cx0klgGw6GjdYcGq5pi3f3lqF-j4~VMKvlnFhLCWWWHvX~1sOwXlE4s7q-Wnt0u7H7LpaTI2cKPE~Vu7icLPd9Ayo9o2NZASPSkcx-uJN4WkWqip5kM8O093H5SNUPeqIw8b4yo7G8Yq2HpyW-vIwypyIlqdUUPSCrKsiyeqg2kh0hCJ2SZLXstGVRM8p4duw~mCXsJ1rVeD1CGFwulXa~~flfTvbx43MzF-4aT~bw__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA
+
+#EXTINF:-1 tvg-id="KBS2.kr",KBS2
+https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMzMTA3OTR9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=mg8Er5Q8qZnOBI23ISJzIYgKKnyN0zeTh3vu4g2Ar4S~Yjx1~Mwg1~5TgrljQ5eMxeWWH6tgy68inq454D~AZ9MFV~Utd2vUhhyfQflvulmq7nm4g3C-p694CyYL-467c3x5LBvh7Feykq6oKyw48byg1--GBqxGqGAL7v-9ER8s0~FaZ~5Msf3gdqwCicMUym0T4INwKVY8~kPgBo~OxSTZqKGuNEscDFRUoPjkllqJGxIeiUF9g0Zp2W9yfXm5reSo9HKFWyAWxXf9QCPycKuCAHi~U~88zbHh0kBKcjKX-GsxO6duX-5w-MJkXjrd9UsZLo43Ckx6pONkP6OvBA__
+
+#EXTINF:-1 tvg-id="KBS24.kr",KBS 24
+https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9uZXdzMjQuZ3NjZG4ua2JzLmNvLmtyL25ld3MyNC0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMzEwNzY0fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=mtvRYoJival6f03ew6G92x5dMVbICL43hi6yB2jvuGIu6PAvhAL6V31IQ4BmMpVu7sr39athbf5n58Dj1zX~EHfnmIdlrY1DxKupfz-vCICKZUg~XdVzf0mfgeiZCzKkWl2fJpLq7UH6D1NseHkZGILB6RhDnQ4oNT-xAwZqjd5idh-sYoUwyQ~o8lSeyU7OnpwKjqBXLgsWc6SXzVBLLLV6PRnSHH6Xus7bCfdS~y12kALRMjmmGZCuGDAB8BJMGkPoVCk-EkvYEuvy-Q2~zwrRk7P73voT3NOT4nkV-UIemJzVaW-n8CDc5pIHKOcMlMsUMFwjBZyDBawCuojJQw__
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIyNDQ1NH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=oRKIHRm1mYA3G4osNwxD-P9t7CtHXU6ygzjyzdp2QodtL8SA6I~ayMBjrvcYxVVRHJbmJmJ9Zjlksetk8x1RLQGBfotpJfs1qqZlgi66f3NeoeImWwmqwqWMzKm0Ws7lrlygETp13-HWupwVUz3HJ3-NrYk50Ny68WwJwRE~hZg_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIyNDQ1NX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=gz1YCzx1mX-Llo-7SJQSo6kNqxkWXcXsBTLu2XI7GXHcfIOd7g3EtR2n5SiRfPVCEScWDk2bttQ9iqf1QU-t4dORnqy0MrxU0HS1sX9NEj1oxJHHtNsaiEr8TjQkdsv7nZ~8LDCCA52fVV0L3leUMBS7QUmQ3cVp2V6FXgCP~CM_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+>>>>>>> Stashed changes
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
@@ -55,6 +74,7 @@ https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8
 https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8
 
 #EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA
+<<<<<<< Updated upstream
 https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod3.m3u8
 
 #EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY
@@ -65,3 +85,15 @@ https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod3.m3u8
 
 #EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE
 https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod3.m3u8
+=======
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+
+#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+
+#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+
+#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE
+https://kbsnvod.gscdn.kbs.co.kr/playlists/nvod1.m3u8\
+>>>>>>> Stashed changes
