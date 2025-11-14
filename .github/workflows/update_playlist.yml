@@ -44,35 +44,37 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
 
-    - name: Check for changes and commit
+    - name: Smart commit and push
       run: |
-        # 检查是否有文件更改
-        if git status --porcelain | grep -q '^[ MAD]'; then
-          echo "📝 检测到文件变更，准备提交..."
-          
-          # 添加所有更改的文件
-          git add -A
-          
-          # 创建提交
-          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-          
-          # 拉取远程最新更改并重定基
-          echo "🔄 拉取远程最新更改..."
-          git pull --rebase origin main
-          
-          # 如果有冲突，使用我们的版本
-          if [ -f ".git/rebase-apply/applying" ] || [ -d ".git/rebase-merge" ]; then
-            echo "⚠️ 检测到冲突，使用本地版本..."
-            git rebase --skip || true
-          fi
-          
-          # 推送更改
-          echo "🚀 推送更改..."
-          git push origin main
-          echo "✅ 变更已提交并推送"
-        else
-          echo "📝 没有检测到文件变更，跳过提交"
+        # 策略：总是使用最新生成的播放列表，忽略合并冲突
+        echo "🔄 采用智能提交策略..."
+        
+        # 拉取最新远程更改（但不用合并）
+        git fetch origin
+        
+        # 重置到远程最新版本（完全覆盖本地）
+        git reset --hard origin/main
+        
+        # 重新运行更新脚本，基于最新的代码
+        echo "🔄 基于最新代码重新生成播放列表..."
+        python update_playlist.py
+        
+        # 检查是否有实际内容变化
+        if git diff --quiet; then
+          echo "📝 没有检测到实际内容变化，跳过提交"
+          exit 0
         fi
+        
+        # 提交更改
+        echo "💾 提交播放列表更新..."
+        git add -A
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+        
+        # 推送更改
+        echo "🚀 推送更新..."
+        git push origin main
+        
+        echo "✅ 播放列表更新完成"
 
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
