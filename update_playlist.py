@@ -518,39 +518,6 @@ def optimize_url_for_china(original_url):
     
     return optimized_urls
 
-def test_url_speed(url, timeout=5):
-    """测试URL访问速度"""
-    try:
-        start_time = time.time()
-        response = requests.head(url, timeout=timeout, allow_redirects=True)
-        end_time = time.time()
-        
-        if response.status_code == 200:
-            return end_time - start_time
-        else:
-            return None
-    except:
-        return None
-
-def get_fastest_url(urls):
-    """获取最快的URL"""
-    fastest_url = urls[0]  # 默认使用第一个
-    fastest_time = float('inf')
-    
-    print("🚀 测试线路速度...")
-    for url_info in urls:
-        speed = test_url_speed(url_info['url'])
-        if speed is not None:
-            print(f"  ⏱️ {url_info['name']}: {speed:.2f}秒")
-            if speed < fastest_time:
-                fastest_time = speed
-                fastest_url = url_info
-        else:
-            print(f"  ❌ {url_info['name']}: 无法访问")
-    
-    print(f"✅ 选择最快线路: {fastest_url['name']}")
-    return fastest_url['url']
-
 def update_stable_repository(content):
     """更新GitHub固定仓库的M3U文件"""
     if not FULL_ACCESS_TOKEN:
@@ -678,4 +645,156 @@ def generate_playlist(dynamic_channels):
     # 最后添加指定的KBS频道
     for channel in dynamic_channels:
         if channel.get('url') and channel['name'] in later_channels:
-            lines.append(f'#EXTINF
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
+            lines.append(channel['url'])
+            lines.append("")
+    
+    return "\n".join(lines)
+
+def generate_china_optimized_playlist(dynamic_channels):
+    """生成中国地区优化的播放列表"""
+    lines = ["#EXTM3U"]
+    lines.append(f"# 中国优化版 - 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("# 提供多条线路以适应不同网络环境")
+    lines.append("# 如果主线路无法播放，请尝试代理线路")
+    lines.append("")
+    
+    # 添加优化说明
+    lines.append("#EXTINF:-1,=== 韩国电视台 (中国优化版) ===")
+    lines.append("#EXTVLCOPT:network-caching=1000")
+    lines.append("#EXTVLCOPT:http-reconnect=true")
+    lines.append("")
+    
+    # 分离出要放在后面的频道
+    later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
+    
+    # 先添加其他动态频道（多线路版本）
+    for channel in dynamic_channels:
+        if channel.get('url') and channel['name'] not in later_channels:
+            # 为每个频道提供多个线路
+            optimized_urls = optimize_url_for_china(channel['url'])
+            
+            # 主线路
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
+            lines.append(channel['url'])
+            lines.append("")
+            
+            # 备用线路（使用代理）
+            for i, url_info in enumerate(optimized_urls[1:], 1):  # 跳过第一个原始URL
+                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
+                lines.append(url_info['url'])
+                lines.append("")
+    
+    # 添加静态频道
+    lines.extend(STATIC_CHANNELS)
+    lines.append("")
+    
+    # 最后添加指定的KBS频道（多线路版本）
+    for channel in dynamic_channels:
+        if channel.get('url') and channel['name'] in later_channels:
+            optimized_urls = optimize_url_for_china(channel['url'])
+            
+            # 主线路
+            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [主线路]')
+            lines.append(channel['url'])
+            lines.append("")
+            
+            # 备用线路
+            for i, url_info in enumerate(optimized_urls[1:], 1):
+                lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]} [代理线路{i}]')
+                lines.append(url_info['url'])
+                lines.append("")
+    
+    # 添加播放器优化建议
+    lines.append("#EXTINF:-1,=== 播放器设置建议 ===")
+    lines.append("# 建议使用VLC、PotPlayer或IINA播放器")
+    lines.append("# 设置网络缓存为1000-3000ms以获得更流畅体验")
+    lines.append("# 如遇卡顿，请切换到代理线路")
+    
+    return "\n".join(lines)
+
+def main():
+    """主函数"""
+    start_time = time.time()
+    print("🎬 开始获取M3U8链接...")
+    print(f"📺 计划获取 {len(CHANNELS)} 个频道")
+    
+    driver = None
+    try:
+        driver = setup_driver()
+        dynamic_channels = []
+        
+        # 遍历所有频道进行抓取
+        for channel in CHANNELS:
+            if "MBN" in channel['name']:
+                # MBN特殊处理 - 多画质版本
+                mbn_channels = get_mbn_m3u8_multiple_quality(driver)
+                dynamic_channels.extend(mbn_channels)
+                print(f"✅ {channel['name']} - 获取成功（双画质）")
+            else:
+                # KBS频道统一处理
+                m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'])
+                if m3u8_url:
+                    dynamic_channels.append({
+                        'name': channel['name'],
+                        'tvg_id': channel['tvg_id'],
+                        'url': m3u8_url
+                    })
+                    print(f"✅ {channel['name']} - 获取成功")
+                else:
+                    print(f"❌ {channel['name']} - 获取失败")
+        
+        # 生成标准版播放列表
+        standard_playlist = generate_playlist(dynamic_channels)
+
+        # 生成中国优化版播放列表
+        china_optimized_playlist = generate_china_optimized_playlist(dynamic_channels)
+
+        print("✅ 播放列表生成完成!")
+
+        # 更新GitHub仓库
+        update_stable_repository(standard_playlist)
+
+        # 上传中国优化版
+        update_stable_repository_optimized(china_optimized_playlist)
+
+        # 保存到本地文件
+        with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
+            f.write(standard_playlist)
+
+        with open('korean_tv_china_optimized.m3u', 'w', encoding='utf-8') as f:
+            f.write(china_optimized_playlist)
+
+        print("💾 播放列表已保存:")
+        print("  📁 korean_tv.m3u - 标准版")
+        print("  📁 korean_tv_china_optimized.m3u - 中国优化版")
+        
+        # 打印统计
+        successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
+        print(f"📊 成功获取 {len(successful_channels)}/{len(dynamic_channels)} 个频道")
+        
+        # 显示频道信息
+        print("\n🎯 成功频道列表:")
+        for channel in successful_channels:
+            print(f"  ✅ {channel['name']}")
+        
+    except Exception as e:
+        print(f"❌ 执行过程中出错: {str(e)}")
+        import traceback
+        print(f"🔍 详细错误信息: {traceback.format_exc()}")
+        
+    finally:
+        if driver:
+            try:
+                print("🔚 关闭浏览器驱动...")
+                driver.quit()
+            except Exception as e:
+                print(f"⚠️ 关闭浏览器驱动时出现警告: {e}")
+        
+        # 计算并显示总执行时间
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"⏱️ 总执行时间: {total_time:.2f}秒")
+
+if __name__ == "__main__":
+    main()
