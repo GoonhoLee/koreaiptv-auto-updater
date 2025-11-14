@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-自动抓取韩国电视台M3U8源并更新Gist、GitHub仓库和Gitee仓库
+自动抓取韩国电视台M3U8源并更新GitHub仓库
 修复KBS2版本，支持MBN多画质
 """
 
@@ -20,7 +20,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 # 配置信息
 GITHUB_USERNAME = "GoonhoLee"
 STABLE_REPO_NAME = "korean-tv-static"
-GIST_ID = "1eefb097a9b3ec25c79bbd4149066d41"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 
 # 电视台配置 - KBS DRAMA、KBS JOY、KBS STORY、KBS LIFE 放在最后面
@@ -320,6 +319,8 @@ def get_kbs_m3u8(driver, url, channel_name):
             
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
+        import traceback
+        print(f"🔍 详细错误信息: {traceback.format_exc()}")
         return None
 
 def get_real_mbn_url_from_response(auth_url):
@@ -334,7 +335,8 @@ def get_real_mbn_url_from_response(auth_url):
             'Referer': 'https://www.mbn.co.kr/vod/onair'
         }
         
-        response = requests.get(auth_url, headers=headers, timeout=10)
+        # 添加更严格的超时设置
+        response = requests.get(auth_url, headers=headers, timeout=(5, 10))
         
         if response.status_code == 200:
             # 获取响应内容
@@ -455,6 +457,8 @@ def get_mbn_m3u8_multiple_quality(driver):
             
     except Exception as e:
         print(f"❌ 获取 MBN 多画质版本时出错: {str(e)}")
+        import traceback
+        print(f"🔍 详细错误信息: {traceback.format_exc()}")
         # 返回备用地址
         return [
             {
@@ -470,41 +474,6 @@ def get_mbn_m3u8_multiple_quality(driver):
                 'quality': '600k'
             }
         ]
-
-def update_gist(content):
-    """更新Gist内容"""
-    if not FULL_ACCESS_TOKEN:
-        print("❌ 未找到FULL_ACCESS_TOKEN，跳过Gist更新")
-        return False
-        
-    url = f"https://api.github.com/gists/{GIST_ID}"
-    headers = {
-        "Authorization": f"token {FULL_ACCESS_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    
-    data = {
-        "description": f"韩国电视台直播源 - 更新时间 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        "files": {
-            "korean_tv.m3u": {
-                "content": content
-            }
-        }
-    }
-    
-    try:
-        print("📝 正在更新Gist...")
-        response = requests.patch(url, headers=headers, json=data)
-        
-        if response.status_code == 200:
-            print("✅ Gist更新成功!")
-            return True
-        else:
-            print(f"❌ Gist更新失败: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ 更新Gist时出错: {str(e)}")
-        return False
 
 def update_stable_repository(content):
     """更新GitHub固定仓库的M3U文件"""
@@ -561,6 +530,8 @@ def update_stable_repository(content):
             
     except Exception as e:
         print(f"❌ 更新GitHub仓库时出错: {str(e)}")
+        import traceback
+        print(f"🔍 详细错误信息: {traceback.format_exc()}")
         return False
         
 def generate_playlist(dynamic_channels):
@@ -594,6 +565,7 @@ def generate_playlist(dynamic_channels):
 
 def main():
     """主函数"""
+    start_time = time.time()
     print("🎬 开始获取M3U8链接...")
     print(f"📺 计划获取 {len(CHANNELS)} 个频道")
     
@@ -626,9 +598,6 @@ def main():
         playlist_content = generate_playlist(dynamic_channels)
         print("✅ 播放列表生成完成!")
         
-        # 更新Gist
-        update_gist(playlist_content)
-        
         # 更新GitHub仓库
         update_stable_repository(playlist_content)
         
@@ -648,10 +617,21 @@ def main():
         
     except Exception as e:
         print(f"❌ 执行过程中出错: {str(e)}")
+        import traceback
+        print(f"🔍 详细错误信息: {traceback.format_exc()}")
+        
     finally:
         if driver:
-            print("🔚 关闭浏览器驱动...")
-            driver.quit()
+            try:
+                print("🔚 关闭浏览器驱动...")
+                driver.quit()
+            except Exception as e:
+                print(f"⚠️ 关闭浏览器驱动时出现警告: {e}")
+        
+        # 计算并显示总执行时间
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"⏱️ 总执行时间: {total_time:.2f}秒")
 
 if __name__ == "__main__":
     main()
