@@ -2,7 +2,7 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
   workflow_dispatch:
   push:
     paths:
@@ -21,6 +21,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.FULL_ACCESS_TOKEN }}
+        # 重要：移除 fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -32,29 +33,41 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4 webdriver-manager
 
-    - name: Simple update process
+    - name: Configure Git
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+
+    - name: Update playlist without conflicts
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
       run: |
-        # 配置Git
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
+        echo "🔄 开始无冲突更新流程..."
         
-        # 确保使用最新代码
-        git pull origin main || true
+        # 关键步骤1：先拉取最新代码
+        echo "📥 拉取最新远程代码..."
+        git pull origin main
         
-        # 生成播放列表
+        # 关键步骤2：基于最新代码生成播放列表
+        echo "🎬 生成最新播放列表..."
         python update_playlist.py
         
-        # 简单提交：有变化就提交，无变化就跳过
-        git add -A
-        if ! git diff --staged --quiet; then
-          git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
-          git push origin main
-          echo "✅ 更新已提交"
-        else
-          echo "📝 无变化，跳过提交"
+        # 关键步骤3：检查是否有实质性变化
+        echo "🔍 检查文件变化..."
+        if git diff --quiet korean_tv.m3u korean_tv_china_optimized.m3u; then
+          echo "📝 播放列表内容无变化，跳过提交"
+          exit 0
         fi
+        
+        # 关键步骤4：提交并推送
+        echo "💾 提交更改..."
+        git add korean_tv.m3u korean_tv_china_optimized.m3u
+        git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+        
+        echo "🚀 推送更新..."
+        git push origin main
+        
+        echo "✅ 无冲突更新完成！"
 
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
