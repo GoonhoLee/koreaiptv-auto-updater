@@ -80,7 +80,32 @@ STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="YTN.kr",YTN',
     'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
     '',
-    # ... 其余静态频道保持不变
+    '#EXTINF:-1 tvg-id="YonhapNews.kr" tvg-logo="https://kenpark76.github.io/logo/연합뉴스TV.png" group-title="🐉한국방송🦆",연합뉴스',
+    'https://dvar4azmtmll0.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-6tpj7htwv2prd/master.m3u8?ads.device_did=%7BPSID%7D&ads.device_dnt=%7BTARGETOPT%7D&ads.app_domain=%7BAPP_DOMAIN%7D&ads.app_name=%7BAPP_NAME%7D',
+    '',
+    '#EXTINF:-1 tvg-id="YonhapNews.kr" tvg-logo="https://kenpark76.github.io/logo/연합뉴스TV.png" group-title="🐉한국방송🦆",연합뉴스',
+    'https://tistory1.daumcdn.net/tistory/2864485/skin/images/CATV_216_AB271679.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="SBS.kr" group-title="🐉한국방송🦆",SBS',
+    'http://koreatv.dothome.co.kr/sbs.php',
+    '',
+    '#EXTINF:-1 tvg-id="SBS.kr" group-title="🐉한국방송🦆",SBS',
+    'http://110.42.54.62:8080/live/sbs.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="SBSJTV.kr" group-title="🐉한국방송🦆",SBS JTV (406p) [Not 24/7]',
+    'http://61.85.197.53:1935/jtv_live/myStream/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="JTV.kr" group-title="🐉한국방송🦆",JTV',
+    'https://tistory1.daumcdn.net/tistory/2864485/skin/images/Public_58.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="MBC.kr" group-title="🐉한국방송🦆",MBC',
+    'http://koreatv.dothome.co.kr/mbc.php',
+    '',
+    '#EXTINF:-1 tvg-id="MBCJeju.kr" group-title="🐉한국방송🦆",MBC제주TV',
+    'https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천',
+    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
 
 def setup_driver():
