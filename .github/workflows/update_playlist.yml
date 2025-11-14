@@ -63,8 +63,6 @@ jobs:
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: korean-tv-playlists
-        path: |
-          korean_tv.m3u
-          korean_tv_china_optimized.m3u
+        name: korean-tv-playlist
+        path: korean_tv.m3u
         retention-days: 7
