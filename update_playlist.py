@@ -73,6 +73,13 @@ STATIC_CHANNELS = [
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
     'http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8',
     '',
+    '#EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)',
+    '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv',
+    'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="YTN.kr",YTN',
+    'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
+    '',
     # ... 其余静态频道保持不变
 ]
 
