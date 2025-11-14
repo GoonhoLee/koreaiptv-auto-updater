@@ -179,8 +179,8 @@ def generate_kbs_auth_url(base_url, channel_name, expires_time=1762427233):
         print(f"❌ 生成KBS认证URL时出错: {str(e)}")
         return base_url
 
-def get_kbs_m3u8(driver, url, channel_name):
-    """获取KBS的m3u8链接"""
+def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
+    """获取KBS的m3u8链接 - 修复KBS2版本"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
@@ -189,7 +189,7 @@ def get_kbs_m3u8(driver, url, channel_name):
         
         driver.get(url)
         
-        # 等待播放器加载
+        # 更长的等待时间，确保视频播放器完全加载
         print("⏳ 等待KBS播放器完全加载...")
         time.sleep(15)
         
@@ -213,6 +213,7 @@ def get_kbs_m3u8(driver, url, channel_name):
         print("🔍 深度搜索页面源代码...")
         page_source = driver.page_source
         
+        # 更全面的m3u8 URL匹配
         m3u8_patterns = [
             r'https?://[^\s"\']*\.m3u8(?:\?[^\s"\']*)?',
             r'["\'](https?://[^"\']*\.m3u8[^"\']*)["\']',
@@ -224,6 +225,59 @@ def get_kbs_m3u8(driver, url, channel_name):
             kbs_urls = [url for url in source_urls if any(domain in url for domain in target_domains)]
             m3u8_urls.extend(kbs_urls)
         
+        # 方法3: 深度JavaScript分析
+        print("🔍 深度分析JavaScript...")
+        try:
+            # 执行JavaScript来获取可能的视频源
+            scripts = [
+                "Array.from(document.querySelectorAll('video')).map(v => v.src).filter(src => src && src.includes('.m3u8'))",
+                "Array.from(document.querySelectorAll('source')).map(s => s.src).filter(src => src && src.includes('.m3u8'))",
+                "Object.values(window).filter(val => typeof val === 'string' && val.includes('.m3u8') && val.includes('kbs'))",
+            ]
+            
+            for script in scripts:
+                try:
+                    result = driver.execute_script(f"return {script}")
+                    if result and isinstance(result, list):
+                        valid_urls = [url for url in result if any(domain in url for domain in target_domains)]
+                        m3u8_urls.extend(valid_urls)
+                        if valid_urls:
+                            print(f"💻 从JS执行找到: {valid_urls}")
+                except:
+                    continue
+                    
+        except Exception as e:
+            print(f"⚠️ 执行JavaScript时出错: {e}")
+        
+        # 方法4: 智能按钮点击
+        print("🔍 智能查找播放按钮...")
+        play_selectors = [
+            "button", 
+            ".btn-play", 
+            ".play-button",
+            "[onclick*='play']",
+            "[class*='play']",
+            "a[href*='javascript']"
+        ]
+        
+        for selector in play_selectors:
+            try:
+                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                for element in elements[:3]:  # 只尝试前几个
+                    try:
+                        text = element.text.lower()
+                        if any(keyword in text for keyword in ['play', '재생', '시작', '보기']):
+                            print(f"🖱️ 尝试点击播放按钮: {text}")
+                            driver.execute_script("arguments[0].click();", element)
+                            time.sleep(5)
+                            # 点击后再次监控网络
+                            new_urls = extract_m3u8_from_network_logs(driver, target_domains)
+                            m3u8_urls.extend(new_urls)
+                    except:
+                        continue
+            except Exception as e:
+                continue
+        
         # 去重并智能选择
         unique_urls = list(set(m3u8_urls))
         
@@ -231,6 +285,7 @@ def get_kbs_m3u8(driver, url, channel_name):
             print(f"📊 找到 {len(unique_urls)} 个可能的m3u8链接")
             
             # 智能选择最佳URL
+            # 优先选择包含认证参数的URL
             auth_urls = [url for url in unique_urls if '?' in url and any(param in url for param in ['Expires=', 'Policy=', 'Signature='])]
             if auth_urls:
                 selected_url = auth_urls[0]
@@ -239,15 +294,15 @@ def get_kbs_m3u8(driver, url, channel_name):
                 selected_url = unique_urls[0]
                 # 如果是KBS1或KBS2但没有认证参数，手动生成认证URL
                 if "KBS1" in channel_name or "KBS2" in channel_name:
-                    base_url = selected_url.split('?')[0]
-                    selected_url = generate_kbs_auth_url(base_url, channel_name)
+                    base_url = selected_url.split('?')[0]  # 获取基础URL
+                    selected_url = generate_kbs_auth_url(base_url, channel_name)  # 传入channel_name
                     print(f"✅ 为 {channel_name} 生成认证地址")
             
             print(f"🔗 最终选择: {selected_url}")
             return selected_url
         else:
             print(f"❌ 未找到 {channel_name} 的真实m3u8地址，使用静态地址")
-            # 返回静态地址
+            # 返回静态地址 - 修复KBS DRAMA, JOY, STORY, LIFE的地址
             if "KBS1" in channel_name:
                 base_url = "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8"
                 return generate_kbs_auth_url(base_url, channel_name)
@@ -256,7 +311,6 @@ def get_kbs_m3u8(driver, url, channel_name):
                 return generate_kbs_auth_url(base_url, channel_name)
             elif "24" in channel_name:
                 return "https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8"
-            # 需要添加对later_channels的支持：
             elif "DRAMA" in channel_name:
                 return "https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8"
             elif "JOY" in channel_name:
