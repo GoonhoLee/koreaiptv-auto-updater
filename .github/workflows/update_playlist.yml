@@ -32,9 +32,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests selenium beautifulsoup4 webdriver-manager
 
-    # 注意：这里完全跳过ChromeDriver手动安装！
-    # Selenium + webdriver-manager 会自动处理
-
     - name: Run update script
       env:
         FULL_ACCESS_TOKEN: ${{ secrets.FULL_ACCESS_TOKEN }}
@@ -45,11 +42,17 @@ jobs:
       run: |
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
+        
+        # 先拉取远程更改并合并
+        echo "🔄 拉取远程更改..."
+        git pull origin main --rebase
+        
         git add -A
         if git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
         else
           git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
+          echo "🔄 推送更改到远程仓库..."
           git push origin main
           echo "✅ 变更已提交"
         fi
