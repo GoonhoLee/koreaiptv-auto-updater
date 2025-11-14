@@ -44,7 +44,7 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 完全重置到远程最新版本
+        # 完全重置到远程最新版本（关键步骤）
         echo "🔄 重置到远程最新版本..."
         git fetch origin
         git reset --hard origin/main
