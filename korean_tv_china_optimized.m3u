@@ -1,0 +1,132 @@
+#EXTM3U
+# 中国优化版 - 生成时间: 2025-11-14 11:37:41
+# 提供多条线路以适应不同网络环境
+# 如果主线路无法播放，请尝试代理线路
+
+#EXTINF:-1,=== 韩国电视台 (中国优化版) ===
+#EXTVLCOPT:network-caching=1000
+#EXTVLCOPT:http-reconnect=true
+
+#EXTINF:-1 tvg-id="KBS1.kr",KBS1 [主线路]
+https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI2ODh9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=YHob5a~Otbi-rMJBle7jJn8nFVlLu1BmnrDLgY~eJrMnkq6UbkBO3RWMDC0lsTzLey2kX2kF1d99sWTQ4gVCn54321wY-VyvFuL7zswjf-7o5CYmNuImF09Oc-SHZpWwD70NAhVC1kYvNgAM13BiKv6MWauFkQT0mio24ol2xZlluu0Si9xZWGJz7TP5~fJ6vlV842MOHtgic0skEnid7nUjpBgf4ZAHOkEuDaccahEgbHGES9eKCutG0sZxvvPi0h~9hQsz-wJoduPLoSp6-3aY-jhgcFhkUp5Mfjrc9jTAYKEUEYZvDIp8RRj4~LagX-OIM2WMTiNOgWVlSeDrvQ__
+
+#EXTINF:-1 tvg-id="KBS1.kr",KBS1 [代理线路1]
+https://corsproxy.io/?https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI2ODh9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=YHob5a~Otbi-rMJBle7jJn8nFVlLu1BmnrDLgY~eJrMnkq6UbkBO3RWMDC0lsTzLey2kX2kF1d99sWTQ4gVCn54321wY-VyvFuL7zswjf-7o5CYmNuImF09Oc-SHZpWwD70NAhVC1kYvNgAM13BiKv6MWauFkQT0mio24ol2xZlluu0Si9xZWGJz7TP5~fJ6vlV842MOHtgic0skEnid7nUjpBgf4ZAHOkEuDaccahEgbHGES9eKCutG0sZxvvPi0h~9hQsz-wJoduPLoSp6-3aY-jhgcFhkUp5Mfjrc9jTAYKEUEYZvDIp8RRj4~LagX-OIM2WMTiNOgWVlSeDrvQ__
+
+#EXTINF:-1 tvg-id="KBS1.kr",KBS1 [代理线路2]
+https://api.allorigins.win/raw?url=https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI2ODh9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=YHob5a~Otbi-rMJBle7jJn8nFVlLu1BmnrDLgY~eJrMnkq6UbkBO3RWMDC0lsTzLey2kX2kF1d99sWTQ4gVCn54321wY-VyvFuL7zswjf-7o5CYmNuImF09Oc-SHZpWwD70NAhVC1kYvNgAM13BiKv6MWauFkQT0mio24ol2xZlluu0Si9xZWGJz7TP5~fJ6vlV842MOHtgic0skEnid7nUjpBgf4ZAHOkEuDaccahEgbHGES9eKCutG0sZxvvPi0h~9hQsz-wJoduPLoSp6-3aY-jhgcFhkUp5Mfjrc9jTAYKEUEYZvDIp8RRj4~LagX-OIM2WMTiNOgWVlSeDrvQ__
+
+#EXTINF:-1 tvg-id="KBS2.kr",KBS2 [主线路]
+https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI3MzN9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=bbFOpVlTth6MOVZeV-SEGwgDcf2lQHCF1KAlIfCMoVAmxvA4xkyaNeqdhCm62wEIieJOJt2oj1L8-9JfvxSDg9QWEVXOXs-xihsWV6~JbYiwgvCYE1QUiwUiRZ1C4KQGY-pPrOQFRR2-u5m09gu3rFPDMKzpQo4BKnIqynO4DJeJVi9tc0vgquA1erBTlMEca2cpw0mmcIUX0xPz3-jr0BnhD8iF6OGKFeb33P40en7gpfhS3StA1EJXKwpYBqZ2MwNYNelgnKlc1V485CENSjTBlYXe-Ss-a8DEvMfYVWLsRfbcNE732hUi6sSrJpbiyoiB0DEehIjyrdv3xqsDpQ__
+
+#EXTINF:-1 tvg-id="KBS2.kr",KBS2 [代理线路1]
+https://corsproxy.io/?https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI3MzN9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=bbFOpVlTth6MOVZeV-SEGwgDcf2lQHCF1KAlIfCMoVAmxvA4xkyaNeqdhCm62wEIieJOJt2oj1L8-9JfvxSDg9QWEVXOXs-xihsWV6~JbYiwgvCYE1QUiwUiRZ1C4KQGY-pPrOQFRR2-u5m09gu3rFPDMKzpQo4BKnIqynO4DJeJVi9tc0vgquA1erBTlMEca2cpw0mmcIUX0xPz3-jr0BnhD8iF6OGKFeb33P40en7gpfhS3StA1EJXKwpYBqZ2MwNYNelgnKlc1V485CENSjTBlYXe-Ss-a8DEvMfYVWLsRfbcNE732hUi6sSrJpbiyoiB0DEehIjyrdv3xqsDpQ__
+
+#EXTINF:-1 tvg-id="KBS2.kr",KBS2 [代理线路2]
+https://api.allorigins.win/raw?url=https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI3MzN9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=bbFOpVlTth6MOVZeV-SEGwgDcf2lQHCF1KAlIfCMoVAmxvA4xkyaNeqdhCm62wEIieJOJt2oj1L8-9JfvxSDg9QWEVXOXs-xihsWV6~JbYiwgvCYE1QUiwUiRZ1C4KQGY-pPrOQFRR2-u5m09gu3rFPDMKzpQo4BKnIqynO4DJeJVi9tc0vgquA1erBTlMEca2cpw0mmcIUX0xPz3-jr0BnhD8iF6OGKFeb33P40en7gpfhS3StA1EJXKwpYBqZ2MwNYNelgnKlc1V485CENSjTBlYXe-Ss-a8DEvMfYVWLsRfbcNE732hUi6sSrJpbiyoiB0DEehIjyrdv3xqsDpQ__
+
+#EXTINF:-1 tvg-id="KBS24.kr",KBS 24 [主线路]
+https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9uZXdzMjQuZ3NjZG4ua2JzLmNvLmtyL25ld3MyNC0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyNzc1fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=nSv4dLhInn8ppLxIQuXY9Qkih4SzA0~T9Vxd6U5BmuI7IkRjkUC7-Nkd45XrLpjPx05ZlDHpbBMnehM-ib9UecNTozqPR1OGtffVvGdKmON7UUfyswCP~Y3jQI1-m8sSE6cPztKD9skuf3c4A5PyybvVNugxDfHOYI3Su-5W09nRQjhP0Ccx1IuFRpQuQEgwo3Eu5HG2e-MG9utrviFm2vc5x9HWuO7sI3gRAeC64OSxcyCxSqnA7rGdsvh3-M4peppewPe39PodYB-5rtXl3GJrlJqYwHqCD1I576kNnnMnjKxvxq4SXz8-M5tPeXIcOCjoRYtIVYqPphhLaVhREA__
+
+#EXTINF:-1 tvg-id="KBS24.kr",KBS 24 [代理线路1]
+https://corsproxy.io/?https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9uZXdzMjQuZ3NjZG4ua2JzLmNvLmtyL25ld3MyNC0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyNzc1fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=nSv4dLhInn8ppLxIQuXY9Qkih4SzA0~T9Vxd6U5BmuI7IkRjkUC7-Nkd45XrLpjPx05ZlDHpbBMnehM-ib9UecNTozqPR1OGtffVvGdKmON7UUfyswCP~Y3jQI1-m8sSE6cPztKD9skuf3c4A5PyybvVNugxDfHOYI3Su-5W09nRQjhP0Ccx1IuFRpQuQEgwo3Eu5HG2e-MG9utrviFm2vc5x9HWuO7sI3gRAeC64OSxcyCxSqnA7rGdsvh3-M4peppewPe39PodYB-5rtXl3GJrlJqYwHqCD1I576kNnnMnjKxvxq4SXz8-M5tPeXIcOCjoRYtIVYqPphhLaVhREA__
+
+#EXTINF:-1 tvg-id="KBS24.kr",KBS 24 [代理线路2]
+https://api.allorigins.win/raw?url=https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9uZXdzMjQuZ3NjZG4ua2JzLmNvLmtyL25ld3MyNC0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyNzc1fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=nSv4dLhInn8ppLxIQuXY9Qkih4SzA0~T9Vxd6U5BmuI7IkRjkUC7-Nkd45XrLpjPx05ZlDHpbBMnehM-ib9UecNTozqPR1OGtffVvGdKmON7UUfyswCP~Y3jQI1-m8sSE6cPztKD9skuf3c4A5PyybvVNugxDfHOYI3Su-5W09nRQjhP0Ccx1IuFRpQuQEgwo3Eu5HG2e-MG9utrviFm2vc5x9HWuO7sI3gRAeC64OSxcyCxSqnA7rGdsvh3-M4peppewPe39PodYB-5rtXl3GJrlJqYwHqCD1I576kNnnMnjKxvxq4SXz8-M5tPeXIcOCjoRYtIVYqPphhLaVhREA__
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（高画质） [主线路]
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4NX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=NPSfljzrF5GV13yNGDJV5dd1vE~a4bnboZcApTScMqtgjRH2bKeMWgNS-lND2WMhorE3xrZeLWBi~UniA0ASgiFN7SjspzQK20DZ7awVzVMDC3lsVGKPO1Bhi7HR4dcdyb23ARkdLuHvhoQYRt3bzjsoc-OI4R~plYSS9vQWg2c_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（高画质） [代理线路1]
+https://corsproxy.io/?https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4NX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=NPSfljzrF5GV13yNGDJV5dd1vE~a4bnboZcApTScMqtgjRH2bKeMWgNS-lND2WMhorE3xrZeLWBi~UniA0ASgiFN7SjspzQK20DZ7awVzVMDC3lsVGKPO1Bhi7HR4dcdyb23ARkdLuHvhoQYRt3bzjsoc-OI4R~plYSS9vQWg2c_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（高画质） [代理线路2]
+https://api.allorigins.win/raw?url=https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4NX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=NPSfljzrF5GV13yNGDJV5dd1vE~a4bnboZcApTScMqtgjRH2bKeMWgNS-lND2WMhorE3xrZeLWBi~UniA0ASgiFN7SjspzQK20DZ7awVzVMDC3lsVGKPO1Bhi7HR4dcdyb23ARkdLuHvhoQYRt3bzjsoc-OI4R~plYSS9vQWg2c_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（标清） [主线路]
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=nm3vuUM-Mq4FRVGVj6ddHS2-r3ztuBWq7M0mil0JXy6iOxaqZTpXVD1pdjG-y4nr-LEm8vMDUeCQ6j0N0xQCIQKNJeWtHw1UZ9rnAQyRNkeCm2oe2gFWFlawZ9CeziZrFWjdddfwz3gOplFvgmdaRQ0flAE6DJLaNhB5s6NkZio_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（标清） [代理线路1]
+https://corsproxy.io/?https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=nm3vuUM-Mq4FRVGVj6ddHS2-r3ztuBWq7M0mil0JXy6iOxaqZTpXVD1pdjG-y4nr-LEm8vMDUeCQ6j0N0xQCIQKNJeWtHw1UZ9rnAQyRNkeCm2oe2gFWFlawZ9CeziZrFWjdddfwz3gOplFvgmdaRQ0flAE6DJLaNhB5s6NkZio_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="MBN.kr",MBN（标清） [代理线路2]
+https://api.allorigins.win/raw?url=https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzIwNjQ4Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=nm3vuUM-Mq4FRVGVj6ddHS2-r3ztuBWq7M0mil0JXy6iOxaqZTpXVD1pdjG-y4nr-LEm8vMDUeCQ6j0N0xQCIQKNJeWtHw1UZ9rnAQyRNkeCm2oe2gFWFlawZ9CeziZrFWjdddfwz3gOplFvgmdaRQ0flAE6DJLaNhB5s6NkZio_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+
+#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
+#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
+http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8
+
+#EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)
+#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv
+http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8
+
+#EXTINF:-1 tvg-id="YTN.kr",YTN
+https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
+
+#EXTINF:-1 tvg-id="YonhapNews.kr" tvg-logo="https://kenpark76.github.io/logo/연합뉴스TV.png" group-title="🐉한국방송🦆",연합뉴스
+https://dvar4azmtmll0.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-6tpj7htwv2prd/master.m3u8?ads.device_did=%7BPSID%7D&ads.device_dnt=%7BTARGETOPT%7D&ads.app_domain=%7BAPP_DOMAIN%7D&ads.app_name=%7BAPP_NAME%7D
+
+#EXTINF:-1 tvg-id="YonhapNews.kr" tvg-logo="https://kenpark76.github.io/logo/연합뉴스TV.png" group-title="🐉한국방송🦆",연합뉴스
+https://tistory1.daumcdn.net/tistory/2864485/skin/images/CATV_216_AB271679.m3u8
+
+#EXTINF:-1 tvg-id="SBS.kr" group-title="🐉한국방송🦆",SBS
+http://koreatv.dothome.co.kr/sbs.php
+
+#EXTINF:-1 tvg-id="SBS.kr" group-title="🐉한국방송🦆",SBS
+http://110.42.54.62:8080/live/sbs.m3u8
+
+#EXTINF:-1 tvg-id="SBSJTV.kr" group-title="🐉한국방송🦆",SBS JTV (406p) [Not 24/7]
+http://61.85.197.53:1935/jtv_live/myStream/playlist.m3u8
+
+#EXTINF:-1 tvg-id="JTV.kr" group-title="🐉한국방송🦆",JTV
+https://tistory1.daumcdn.net/tistory/2864485/skin/images/Public_58.m3u8
+
+#EXTINF:-1 tvg-id="MBC.kr" group-title="🐉한국방송🦆",MBC
+http://koreatv.dothome.co.kr/mbc.php
+
+#EXTINF:-1 tvg-id="MBCJeju.kr" group-title="🐉한국방송🦆",MBC제주TV
+https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8
+
+#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천
+https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8
+
+#EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA [主线路]
+https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuZHJhbWEuZ3NjZG4ua2JzLmNvLmtyL2tic25kcmFtYS0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyODM3fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=OYfjdpZk6dtv1hS80dZmy-rsZEuir~bWjvVSRCHsSeB0yEHlHvCnLXb7ofCmKHYnHelcayQcqocVocPxCFVh-S4K09KmuXogiPJ8CBRowa5BWEECUjBGxiSBrsaLmhfIzLQ9ucSKTHxsRpiYguV7fyfn~As9QrMtSNKEHemDyQsHCrEj4atZCmXSLrVF9r3-goq4Sd6OfdJ6Xg8lcWIaTjy-cmh9y6JK9yBgBczyVDB3tD~M0LeZcow6GWpvlDqjNb8NHRD-sW8TEgPt09Pc3sPC~P6Mpn-7f7rcnAHXfV9zRpotwhLe9yf-rXuGKgHxf4KG0D9KzeEL3xctZfL6-g__
+
+#EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA [代理线路1]
+https://corsproxy.io/?https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuZHJhbWEuZ3NjZG4ua2JzLmNvLmtyL2tic25kcmFtYS0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyODM3fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=OYfjdpZk6dtv1hS80dZmy-rsZEuir~bWjvVSRCHsSeB0yEHlHvCnLXb7ofCmKHYnHelcayQcqocVocPxCFVh-S4K09KmuXogiPJ8CBRowa5BWEECUjBGxiSBrsaLmhfIzLQ9ucSKTHxsRpiYguV7fyfn~As9QrMtSNKEHemDyQsHCrEj4atZCmXSLrVF9r3-goq4Sd6OfdJ6Xg8lcWIaTjy-cmh9y6JK9yBgBczyVDB3tD~M0LeZcow6GWpvlDqjNb8NHRD-sW8TEgPt09Pc3sPC~P6Mpn-7f7rcnAHXfV9zRpotwhLe9yf-rXuGKgHxf4KG0D9KzeEL3xctZfL6-g__
+
+#EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA [代理线路2]
+https://api.allorigins.win/raw?url=https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuZHJhbWEuZ3NjZG4ua2JzLmNvLmtyL2tic25kcmFtYS0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzYzMjkyODM3fX19XX0_&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=OYfjdpZk6dtv1hS80dZmy-rsZEuir~bWjvVSRCHsSeB0yEHlHvCnLXb7ofCmKHYnHelcayQcqocVocPxCFVh-S4K09KmuXogiPJ8CBRowa5BWEECUjBGxiSBrsaLmhfIzLQ9ucSKTHxsRpiYguV7fyfn~As9QrMtSNKEHemDyQsHCrEj4atZCmXSLrVF9r3-goq4Sd6OfdJ6Xg8lcWIaTjy-cmh9y6JK9yBgBczyVDB3tD~M0LeZcow6GWpvlDqjNb8NHRD-sW8TEgPt09Pc3sPC~P6Mpn-7f7rcnAHXfV9zRpotwhLe9yf-rXuGKgHxf4KG0D9KzeEL3xctZfL6-g__
+
+#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY [主线路]
+https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuam95LmdzY2RuLmticy5jby5rci9rYnNuam95LTAyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI4OTV9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=WELdKJUpOxLjOxRS-25ZRtu1vtQY63CmP6YuyembSemj6C5DvV-~a1IkmwIAvA-QuezhbpH6t-FiMdgzBjENkB7Ms7DjQa4Kw6NRuXdVVEG5EN91S0zSDRCGV4iiUIILrCeeqOnTXZ6sPKWraGtU5GvJz3RMajKbjZsam6lu8D8ZVlEdYo20mf4kFlG93yGfK0Drsb~iMpQkW9FdQiCrS7hOtdHQG8T0EGK0-SwQ1ylTCj-qXIaKWNYoYkSdFHJmqDZIujS8jtRtA-FzpHbDsGFGrG0Yu-m45ZLbkIs7uH6CJx2TYcbxMt9VvrhnBJpANcGCtsoKZ4AYZ1v1RahrVw__
+
+#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY [代理线路1]
+https://corsproxy.io/?https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuam95LmdzY2RuLmticy5jby5rci9rYnNuam95LTAyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI4OTV9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=WELdKJUpOxLjOxRS-25ZRtu1vtQY63CmP6YuyembSemj6C5DvV-~a1IkmwIAvA-QuezhbpH6t-FiMdgzBjENkB7Ms7DjQa4Kw6NRuXdVVEG5EN91S0zSDRCGV4iiUIILrCeeqOnTXZ6sPKWraGtU5GvJz3RMajKbjZsam6lu8D8ZVlEdYo20mf4kFlG93yGfK0Drsb~iMpQkW9FdQiCrS7hOtdHQG8T0EGK0-SwQ1ylTCj-qXIaKWNYoYkSdFHJmqDZIujS8jtRtA-FzpHbDsGFGrG0Yu-m45ZLbkIs7uH6CJx2TYcbxMt9VvrhnBJpANcGCtsoKZ4AYZ1v1RahrVw__
+
+#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY [代理线路2]
+https://api.allorigins.win/raw?url=https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuam95LmdzY2RuLmticy5jby5rci9rYnNuam95LTAyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjMyOTI4OTV9fX1dfQ__&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=WELdKJUpOxLjOxRS-25ZRtu1vtQY63CmP6YuyembSemj6C5DvV-~a1IkmwIAvA-QuezhbpH6t-FiMdgzBjENkB7Ms7DjQa4Kw6NRuXdVVEG5EN91S0zSDRCGV4iiUIILrCeeqOnTXZ6sPKWraGtU5GvJz3RMajKbjZsam6lu8D8ZVlEdYo20mf4kFlG93yGfK0Drsb~iMpQkW9FdQiCrS7hOtdHQG8T0EGK0-SwQ1ylTCj-qXIaKWNYoYkSdFHJmqDZIujS8jtRtA-FzpHbDsGFGrG0Yu-m45ZLbkIs7uH6CJx2TYcbxMt9VvrhnBJpANcGCtsoKZ4AYZ1v1RahrVw__
+
+#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY [主线路]
+https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNudy5nc2Nkbi5rYnMuY28ua3Iva2JzbnctMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk2MH19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=jpJ~7Gp48SqknB9BSpChx5pTGwbkRkdxVeZWR1sEGm~uWtLmIgLwswvTReVYTAzLsXk11jS6-5W1U8Z-jGNl~oyRlONx3lkTEXy-hw3cHLmivFetMErLoR73yA0B6yYQo9OGA7acJSeA96rJ5hX04XyxU0uwy~HY4F-0afChEeFD5i5emesOTkWLt5ZXpNK2R6SeoIBoAu7bAL6f5fye4wL7pbVrgWKjc15OAUkXMKiLLOaeDV6AtT6R0rWjt9-L7ar-Qq-rCJwVe8tLjcDJQc8AKpl49GRKorpqPDQoo5~vkKva5C1eq8asgWfqAQXsoeVjyfXKEsMAD-gxfbWPaQ__
+
+#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY [代理线路1]
+https://corsproxy.io/?https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNudy5nc2Nkbi5rYnMuY28ua3Iva2JzbnctMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk2MH19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=jpJ~7Gp48SqknB9BSpChx5pTGwbkRkdxVeZWR1sEGm~uWtLmIgLwswvTReVYTAzLsXk11jS6-5W1U8Z-jGNl~oyRlONx3lkTEXy-hw3cHLmivFetMErLoR73yA0B6yYQo9OGA7acJSeA96rJ5hX04XyxU0uwy~HY4F-0afChEeFD5i5emesOTkWLt5ZXpNK2R6SeoIBoAu7bAL6f5fye4wL7pbVrgWKjc15OAUkXMKiLLOaeDV6AtT6R0rWjt9-L7ar-Qq-rCJwVe8tLjcDJQc8AKpl49GRKorpqPDQoo5~vkKva5C1eq8asgWfqAQXsoeVjyfXKEsMAD-gxfbWPaQ__
+
+#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY [代理线路2]
+https://api.allorigins.win/raw?url=https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNudy5nc2Nkbi5rYnMuY28ua3Iva2JzbnctMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk2MH19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=jpJ~7Gp48SqknB9BSpChx5pTGwbkRkdxVeZWR1sEGm~uWtLmIgLwswvTReVYTAzLsXk11jS6-5W1U8Z-jGNl~oyRlONx3lkTEXy-hw3cHLmivFetMErLoR73yA0B6yYQo9OGA7acJSeA96rJ5hX04XyxU0uwy~HY4F-0afChEeFD5i5emesOTkWLt5ZXpNK2R6SeoIBoAu7bAL6f5fye4wL7pbVrgWKjc15OAUkXMKiLLOaeDV6AtT6R0rWjt9-L7ar-Qq-rCJwVe8tLjcDJQc8AKpl49GRKorpqPDQoo5~vkKva5C1eq8asgWfqAQXsoeVjyfXKEsMAD-gxfbWPaQ__
+
+#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE [主线路]
+https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNubGlmZS5nc2Nkbi5rYnMuY28ua3Iva2JzbmxpZmUtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk5NX19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=kn2MYlzn6uCpLJb17Eeu-p2Xj50MkcIk3iuze4Ga-a-3N7ocFvewWi0zDhhh41FoqJxyWBMS~NNgh4O1r8D7PDWabGuq5E1tUd2riMfMTetJ8FqQXR2JQrJ-VABgqsf1j8fScLr7HrLoa5kKMDVsTt~j3qAxTNtSjhYynfnc0DI~Ey1aeO2rn49mEixpBl82hSNOm6MuHWhXClHe1oaZp6jQsNYl-LWa0Jziv4TXTPCBzzfa3rrNJSoV9XTwFIHKaQnVFzXGXJBLYPQdadSAABwvOLAG41VFNkyZT21yl96mykgvcutEFq0LO-xMm~k~oSpoScUL1f26KnHIOHltCg__
+
+#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE [代理线路1]
+https://corsproxy.io/?https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNubGlmZS5nc2Nkbi5rYnMuY28ua3Iva2JzbmxpZmUtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk5NX19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=kn2MYlzn6uCpLJb17Eeu-p2Xj50MkcIk3iuze4Ga-a-3N7ocFvewWi0zDhhh41FoqJxyWBMS~NNgh4O1r8D7PDWabGuq5E1tUd2riMfMTetJ8FqQXR2JQrJ-VABgqsf1j8fScLr7HrLoa5kKMDVsTt~j3qAxTNtSjhYynfnc0DI~Ey1aeO2rn49mEixpBl82hSNOm6MuHWhXClHe1oaZp6jQsNYl-LWa0Jziv4TXTPCBzzfa3rrNJSoV9XTwFIHKaQnVFzXGXJBLYPQdadSAABwvOLAG41VFNkyZT21yl96mykgvcutEFq0LO-xMm~k~oSpoScUL1f26KnHIOHltCg__
+
+#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE [代理线路2]
+https://api.allorigins.win/raw?url=https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNubGlmZS5nc2Nkbi5rYnMuY28ua3Iva2JzbmxpZmUtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2MzI5Mjk5NX19fV19&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature=kn2MYlzn6uCpLJb17Eeu-p2Xj50MkcIk3iuze4Ga-a-3N7ocFvewWi0zDhhh41FoqJxyWBMS~NNgh4O1r8D7PDWabGuq5E1tUd2riMfMTetJ8FqQXR2JQrJ-VABgqsf1j8fScLr7HrLoa5kKMDVsTt~j3qAxTNtSjhYynfnc0DI~Ey1aeO2rn49mEixpBl82hSNOm6MuHWhXClHe1oaZp6jQsNYl-LWa0Jziv4TXTPCBzzfa3rrNJSoV9XTwFIHKaQnVFzXGXJBLYPQdadSAABwvOLAG41VFNkyZT21yl96mykgvcutEFq0LO-xMm~k~oSpoScUL1f26KnHIOHltCg__
+
+#EXTINF:-1,=== 播放器设置建议 ===
+# 建议使用VLC、PotPlayer或IINA播放器
+# 设置网络缓存为1000-3000ms以获得更流畅体验
+# 如遇卡顿，请切换到代理线路
