@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-修复KBS抓取问题：切换为移动端 User-Agent，强制加载 HTML5 播放器
+修复KBS抓取问题：弃用UI模拟，改用 KBS 官方 API 接口直连
 """
 
 import requests
-import re
 import time
 import json
 import os
@@ -17,8 +16,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 # 配置信息
 GITHUB_USERNAME = "GoonhoLee"
@@ -26,47 +23,19 @@ STABLE_REPO_NAME = "korean-tv-static"
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 
 # 电视台配置
+# 注意：KBS 这里我们只需要 code，不需要原始播放页 URL
 CHANNELS = [
-    {
-        "name": "KBS1",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=11&ch_type=globalList",
-        "tvg_id": "KBS1.kr"
-    },
-    {
-        "name": "KBS2", 
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=12&ch_type=globalList",
-        "tvg_id": "KBS2.kr"
-    },
-    {
-        "name": "KBS 24",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=81&ch_type=globalList",
-        "tvg_id": "KBS24.kr"
-    },
-    {
-        "name": "MBN",
-        "url": "https://www.mbn.co.kr/vod/onair",
-        "tvg_id": "MBN.kr"
-    },
-    {
-        "name": "KBS DRAMA",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N91&ch_type=globalList",
-        "tvg_id": "KBSDRAMA.kr"
-    },
-    {
-        "name": "KBS JOY",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N92&ch_type=globalList",
-        "tvg_id": "KBSJOY.kr"
-    },
-    {
-        "name": "KBS STORY",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N94&ch_type=globalList",
-        "tvg_id": "KBSSTORY.kr"
-    },
-    {
-        "name": "KBS LIFE",
-        "url": "https://onair.kbs.co.kr/index.html?sname=onair&stype=live&ch_code=N93&ch_type=globalList",
-        "tvg_id": "KBSLIFE.kr"
-    }
+    # KBS 频道 (使用 API Code)
+    {"name": "KBS1",      "code": "11",  "tvg_id": "KBS1.kr", "type": "KBS"},
+    {"name": "KBS2",      "code": "12",  "tvg_id": "KBS2.kr", "type": "KBS"},
+    {"name": "KBS 24",    "code": "81",  "tvg_id": "KBS24.kr", "type": "KBS"},
+    {"name": "KBS DRAMA", "code": "N91", "tvg_id": "KBSDRAMA.kr", "type": "KBS"},
+    {"name": "KBS JOY",   "code": "N92", "tvg_id": "KBSJOY.kr", "type": "KBS"},
+    {"name": "KBS STORY", "code": "N94", "tvg_id": "KBSSTORY.kr", "type": "KBS"},
+    {"name": "KBS LIFE",  "code": "N93", "tvg_id": "KBSLIFE.kr", "type": "KBS"},
+    
+    # MBN 频道 (保留原有逻辑)
+    {"name": "MBN",       "url": "https://www.mbn.co.kr/vod/onair", "tvg_id": "MBN.kr", "type": "MBN"},
 ]
 
 # 静态频道列表
@@ -111,20 +80,17 @@ STATIC_CHANNELS = [
 ]
 
 def setup_driver():
-    """设置Chrome驱动 - 模拟 iPhone"""
+    """设置Chrome驱动"""
     chrome_options = Options()
     chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--window-size=375,812') # iPhone X 尺寸
+    chrome_options.add_argument('--window-size=1920,1080')
     
-    # 模拟 iPhone User-Agent
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1')
+    # 模拟真实 PC 浏览器，这对 API 访问很重要
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
     
-    # 自动播放设置
-    chrome_options.add_argument("--autoplay-policy=no-user-gesture-required")
-    chrome_options.add_argument("--mute-audio")
-    
+    # 开启日志 (MBN需要)
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     
     service = Service(ChromeDriverManager().install())
@@ -132,8 +98,54 @@ def setup_driver():
     
     return driver
 
+def get_kbs_via_api(driver: webdriver.Chrome, code: str, channel_name: str) -> Optional[str]:
+    """通过 KBS 官方 API 直接获取 m3u8 (绕过播放器UI)"""
+    try:
+        print(f"🎬 正在通过 API 获取 {channel_name} (Code: {code})...")
+        
+        # KBS 内部 API 地址，直接返回包含 m3u8 的 JSON
+        api_url = f"https://kapi.kbs.co.kr/api/v1/landing/live/channel_code/{code}"
+        
+        # 使用 Selenium 访问 API (为了带上浏览器的 Cookie/Headers)
+        driver.get(api_url)
+        
+        # 提取页面内容 (JSON)
+        page_source = driver.find_element(By.TAG_NAME, 'body').text
+        
+        try:
+            data = json.loads(page_source)
+            # 解析 JSON 结构: channel_item -> streams -> service_url
+            if "channel_item" in data and len(data["channel_item"]) > 0:
+                streams = data["channel_item"][0].get("streams", [])
+                if streams:
+                    # 优先找 hls 类型
+                    for stream in streams:
+                        if stream.get("service_url"):
+                            m3u8_url = stream["service_url"]
+                            print(f"✅ API 成功返回地址")
+                            # 简单的验证
+                            if "Policy=" in m3u8_url:
+                                return m3u8_url
+                            else:
+                                print(f"⚠️ 获取到的地址似乎没有签名，可能已失效，但仍尝试返回")
+                                return m3u8_url
+            
+            print(f"❌ API 返回了 JSON，但未找到 streams 字段。可能是地区限制。")
+            # 如果是在 GitHub Actions (US IP)，这里大概率会失败
+            if "geoblock" in page_source.lower():
+                print("🚫 检测到地区封锁 (Geo-blocked)")
+                
+        except json.JSONDecodeError:
+            print(f"❌ API 返回的不是有效 JSON: {page_source[:100]}...")
+            
+        return None
+
+    except Exception as e:
+        print(f"❌ API 请求出错: {str(e)}")
+        return None
+
 def extract_m3u8_from_network_logs(driver, target_domains):
-    """从网络日志中提取m3u8链接"""
+    """(保留给MBN使用) 从网络日志中提取m3u8链接"""
     m3u8_urls = []
     try:
         logs = driver.get_log('performance')
@@ -141,11 +153,9 @@ def extract_m3u8_from_network_logs(driver, target_domains):
             try:
                 message = json.loads(log['message'])['message']
                 method = message.get('method')
-                
                 if method in ['Network.responseReceived', 'Network.requestWillBeSent']:
                     request = message['params'].get('request', {})
                     response = message['params'].get('response', {})
-                    
                     urls = [request.get('url', ''), response.get('url', '')]
                     for url in urls:
                         if url and '.m3u8' in url:
@@ -153,79 +163,12 @@ def extract_m3u8_from_network_logs(driver, target_domains):
                                 m3u8_urls.append(url)
             except Exception:
                 continue
-    except Exception as e:
-        print(f"⚠️ 读取日志错: {e}")
+    except Exception:
+        pass
     return list(set(m3u8_urls))
 
-def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """获取KBS的m3u8链接 - 移动端模拟版"""
-    try:
-        print(f"🎬 正在获取 {channel_name}...")
-        
-        # 特征码映射
-        kbs_signatures = {
-            "KBS1": "1tv.gscdn",
-            "KBS2": "2tv.gscdn",
-            "KBS 24": "news24.gscdn",
-            "KBS DRAMA": "kbsndrama.gscdn",
-            "KBS JOY": "kbsnjoy.gscdn",
-            "KBS STORY": "kbsnw.gscdn",
-            "KBS LIFE": "kbsnlife.gscdn"
-        }
-        target_signature = kbs_signatures.get(channel_name, "gscdn.kbs")
-        
-        driver.get(url)
-        time.sleep(3) # 等待页面加载
-        
-        # 1. 尝试暴力点击所有看起来像播放按钮的东西 (JS注入)
-        # 移动端通常有一个巨大的覆盖层按钮
-        print("👆 尝试点击播放按钮 (JS)...")
-        driver.execute_script("""
-            var buttons = document.querySelectorAll('[class*="play"], [id*="play"], button, .vjs-big-play-button, a[href="#"]');
-            for(var i=0; i<buttons.length; i++){
-                var rect = buttons[i].getBoundingClientRect();
-                // 排除不可见的元素
-                if(rect.width > 0 && rect.height > 0) {
-                    try { buttons[i].click(); } catch(e){}
-                }
-            }
-        """)
-        
-        # 2. 循环等待网络请求 (20秒)
-        # 移动端不一定有 <video> 标签，有时是直接 iframe 加载
-        print("⏳ 监控网络请求 (20秒)...")
-        found_url = None
-        target_domains = ['gscdn.kbs.co.kr', 'kbs.co.kr']
-        
-        for i in range(20):
-            network_urls = extract_m3u8_from_network_logs(driver, target_domains)
-            
-            # 优先找带签名的
-            valid_urls = [
-                u for u in network_urls 
-                if target_signature in u 
-                and 'Policy=' in u
-            ]
-            
-            if valid_urls:
-                found_url = sorted(valid_urls, key=len, reverse=True)[0]
-                print(f"⚡ 成功捕获链接！(耗时 {i}s)")
-                break
-            
-            time.sleep(1)
-
-        if found_url:
-            print(f"✅ 找到地址")
-            return found_url
-            
-        print(f"❌ 未找到有效地址")
-        return None
-            
-    except Exception as e:
-        print(f"❌ 出错: {str(e)}")
-        return None
-
 def get_real_mbn_url_from_response(auth_url):
+    """MBN 辅助函数"""
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -239,6 +182,7 @@ def get_real_mbn_url_from_response(auth_url):
     return None
 
 def get_mbn_m3u8_multiple_quality(driver):
+    """MBN 抓取逻辑 (保持不变)"""
     mbn_channels = []
     try:
         print("🚀 获取 MBN...")
@@ -274,7 +218,7 @@ def get_mbn_m3u8_multiple_quality(driver):
 
 def update_stable_repository(content):
     if not FULL_ACCESS_TOKEN:
-        print("❌ 无Token")
+        print("❌ 无Token，跳过 GitHub 更新")
         return False
     
     url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv.m3u"
@@ -294,22 +238,26 @@ def update_stable_repository(content):
         requests.put(url, headers=headers, json=data)
         print("🎉 GitHub仓库更新成功!")
         return True
-    except:
+    except Exception as e:
+        print(f"❌ GitHub更新失败: {e}")
         return False
 
 def generate_playlist(dynamic_channels):
     lines = ["#EXTM3U", f"# Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ""]
     later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
     
+    # 普通频道
     for ch in dynamic_channels:
         if ch['name'] not in later_channels:
             lines.append(f'#EXTINF:-1 tvg-id="{ch["tvg_id"]}",{ch["name"]}')
             lines.append(ch['url'])
             lines.append("")
             
+    # 静态频道
     lines.extend(STATIC_CHANNELS)
     lines.append("")
     
+    # KBS 有线频道
     for ch in dynamic_channels:
         if ch['name'] in later_channels:
             lines.append(f'#EXTINF:-1 tvg-id="{ch["tvg_id"]}",{ch["name"]}')
@@ -319,16 +267,19 @@ def generate_playlist(dynamic_channels):
     return "\n".join(lines)
 
 def main():
-    print("🎬 开始运行...")
+    print("🎬 开始运行 (KBS API 模式)...")
     driver = setup_driver()
     channels_data = []
     
     try:
         for channel in CHANNELS:
-            if channel['name'] == "MBN":
+            # MBN 逻辑
+            if channel["type"] == "MBN":
                 channels_data.extend(get_mbn_m3u8_multiple_quality(driver))
-            else:
-                url = get_kbs_m3u8(driver, channel['url'], channel['name'])
+            
+            # KBS 逻辑 (API)
+            elif channel["type"] == "KBS":
+                url = get_kbs_via_api(driver, channel['code'], channel['name'])
                 if url:
                     channels_data.append({
                         'name': channel['name'],
@@ -337,8 +288,12 @@ def main():
                     })
         
         playlist = generate_playlist(channels_data)
+        
+        # 保存本地
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
             f.write(playlist)
+            
+        # 更新GitHub
         update_stable_repository(playlist)
         
         print(f"📊 完成！成功获取 {len(channels_data)} 个频道")
