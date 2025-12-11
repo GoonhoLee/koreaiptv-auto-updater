@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-KBS频道抓取改进版本 - 直接提取JavaScript中的认证逻辑
+KBS频道使用手动维护的认证参数
 """
 
 import requests
@@ -120,6 +120,47 @@ KBS_BASE_URLS = {
     "KBS LIFE": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
 }
 
+# KBS频道认证参数（需要手动定期更新）
+# 更新方法：访问KBS网站，等待广告结束，复制完整的m3u8 URL
+KBS_AUTH_PARAMS = {
+    # 这些参数会过期，需要定期手动更新
+    "KBS1": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8xdHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjU2Mzk3MjR9fX1dfQ__",
+        "Signature": "DAa9OYHseeotVqKiKqBjmI~8VTC-iFHGWqdVoet7M8TGbb2Qb86r8cMKUFU5w3pY4-EogXBEn33E5FUElMkZumWokz9jLSEdpFst3aWuAXH-ayLuZahUe4dwuw8uj9fITpVZoWn5wk~a9YdgQ2goZ5L5ZHXgTRvG-xc1~F4-STvIEp1-7gFLaGkF58~B7E93srgOIzFnXlL1bUTbRvq6YGDnOtm5I17RQo~Qp~mludJlcge~Ax6KrnZYoNRSZjj24hpOokvv6JOeGegSMrVNvqQNdVzHHa7amtiSlbbuDzsz7GcTWOYCb5vdFTzDtGXjSFObE4e0gG9kyVlfzJhFAA__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS2": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly8ydHYuZ3NjZG4ua2JzLmNvLmtyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjU2Mzk4MTd9fX1dfQ__",
+        "Signature": "IPXlitb6uXmRgDLsOYiGRWaec4~a0DJqahypbtf6jFYZdgvadI28euD~QKZwGOJmpa5FqQonMF1Lrcbfs-2EpoU5lEML~mHwE9Gxj1ws4EymA7XlzJwEdKTRGdBIYlCjIAvmF6I55oH5IGZYYCY~M4w37NFASZlv3NR0~XE1S9EJjKPQD5vX6sa-dsJiu53wNyBTQcqLBpv7Ibt9EvlrU3fTz3k-38VkC5MA4AgCZHjowQktDoYRBEDPAwbR6GEMAFjxSlCvAkxi5V8X-od4XWpIdx8d1gbzvutAHT9trMvF5LX2LzKLB0lVKMOteRjnEP6Z5YndYE3hdMEcgtOzlA__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS 24": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9uZXdzMjQuZ3NjZG4ua2JzLmNvLmtyL25ld3MyNC0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzY1NjM5ODI5fX19XX0_",
+        "Signature": "R7g6u7wWLRHVmrq4eZujwXHb0TlMlPkjBaNuSea0RYA-a7vcpiXmAHEXIIAtLPUHSMzhq5vFWbzaBLkDVVuXRNbhhoi3OxtvyP6CSq-cnjgwTrrp~9421oe1COVP6hZq~dtwDNgYR45WW3F7l28ayj0RW2CTp8cMzXB1GwRxBSHPk0CJYtwVwOPQ-vNl0rjZYPzVv5VcLOPJegg5dMSIKezRgADQJTMXWtxlivo3ltJEWFoc~KzlB5Wk5cNdyDzfEoIN6TVqtIitURhWtZiz1wpxE9GLTAsVX1fAEiRM67kDLjTyzCtY9niPMrAlwGiBgZvDaP~LdBH7O0m7-niujg__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS DRAMA": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuZHJhbWEuZ3NjZG4ua2JzLmNvLmtyL2tic25kcmFtYS0wMi8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzY1NjM5OTIzfX19XX0_",
+        "Signature": "Kyozib4mqtgyMnvJQIo8DCluFK9uMAiNFGvT1hQP-CFRxZD7sWzBQC7tcGXAwdGg0ui71PmOcGVzZY35~m8mnPxbh3nP4F0mRtlBYEjDIIY5mPybMwk~CfwcsfIwj4OlO1F6Ktkd2GemtsjEm47FMEUA1rcMX4yKMFEG5RV7MI0~TzAJFOGeVjK1Nw2Q6LF9noCoXlUDrhEL6sh8J8sRFtOt2Si4dPoVybZDtEsKyGzgH0v4rBAXetvpy5dzyUIgD1jk36PKVgH8WfDKKMRZaZs9ZdCzvvTiA5c-OFUSmw1ig6FG5kUPbsrVif8LN7xAGfBAgJo9B882Uy0rh66qow__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS JOY": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNuam95LmdzY2RuLmticy5jby5rci9rYnNuam95LTAyLyoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NjU2Mzk5NTN9fX1dfQ__",
+        "Signature": "lbEQuwhlaHAasRkrNWn0T1uTaJ3Ez61n7Kijzz7eHDXYdXzCWr8QCYHEBaYOgqBvYazqPqkldxPgMhg~IzyC9XN6t8o2ETgN83tZN6JtplVn7aYISYXg95UpBSoRV5Dhp21Mgmy7M~bWo1mKcKeoRH4nzkrl0mejLZ7cXlNu9sena-l42pXYKrI7X2cEF7mumV3NooRdTvolLYvUjFfj65UL9IZymsEtHwBmkk3nDCf8NXYwTIX9f1AT281Unxo92vtmKcJGzaIuoajNgkMJ3jE9lERoOGMnPc7pn11Y~j9kaO6rO3ht8c60mQaXX9Q0DXowAXw3KkIjS9SVWxjVNQ__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS STORY": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNudy5nc2Nkbi5rYnMuY28ua3Iva2JzbnctMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTY0MDA2M319fV19",
+        "Signature": "g8JjSuy~TnERV8F341xDUhh1FX1WIB7ehrH7nvOBnBrj8vOeiLYicghIN9Fys9zmeURyFQRGGmokYx8Mwaq~8GCKdGjCRGwOi97YWdtUoO2DF0-IxSyYNElSrVru3DNe0jGABS6bXU4nGM~NLD8PzZbn0eIdXQQBT1OJ04N6c~OSahcks5RV-moCk4FojIYRJ92tIYQJqmDzfvFRLNiTV3VUhVRz-ZCRBxNLBWnqvq20l5RSYB1dzoW-Ixpnz5-8k0p5iui9zqmoCU6~-eXL0omMYRwVIXHsuI6jGGvBv3RCjnxV03wyPd--WWQ4ikIr7T2KBut389dUnpTM7qQgqg__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    },
+    "KBS LIFE": {
+        "Policy": "eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9rYnNubGlmZS5nc2Nkbi5rYnMuY28ua3Iva2JzbmxpZmUtMDIvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTY0MDA2MX19fV19",
+        "Signature": "Dxvfd8XU3PobVd-rZwznN2UjfhGYYCDwwi1t8515Rt1dDsLm10oRJ65GAd0WCEbjiqpyMmr51cCClaFc9SWkhFGCxfUFc0UIxVsluuFj8PGLrAVuwuqmODmjlqvR6lYwbMXEQA8Kdc-LHAEsnMKdoeumIi0g8iQ2~ocyDs-5ZX4~41mVmNjVaphXHK5x4rHhosNSK3RNlHU28dTI8s3jYED51QtUt3xJ8L-LlXGXwwAjPS6zRMksnisrlQRvGVjxfGHy9dtT~SejMOEElKMF6WNsZur69ZLTNXdw4l~XN0MNY4reNHbryVV2x8rOkvxztq1OUwLDufH8vNgB7xCCPg__",
+        "Key-Pair-Id": "APKAICDSGT3Y7IXGJ3TA"
+    }
+}
+
 def setup_driver():
     """设置Chrome驱动"""
     chrome_options = Options()
@@ -141,320 +182,41 @@ def setup_driver():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
-def extract_m3u8_from_network_logs(driver, target_domains):
-    """从网络日志中提取m3u8链接"""
-    m3u8_urls = []
-    try:
-        logs = driver.get_log('performance')
-        for log in logs:
-            try:
-                message = json.loads(log['message'])['message']
-                method = message.get('method')
-                
-                if method in ['Network.responseReceived', 'Network.requestWillBeSent']:
-                    request = message['params'].get('request', {})
-                    response = message['params'].get('response', {})
-                    
-                    urls = [request.get('url', ''), response.get('url', '')]
-                    for url in urls:
-                        if url and '.m3u8' in url and any(domain in url for domain in target_domains):
-                            m3u8_urls.append(url)
-                            
-            except Exception:
-                continue
-                
-    except Exception as e:
-        print(f"⚠️ 读取网络日志时出错: {e}")
-    
-    return list(set(m3u8_urls))
-
-def extract_kbs_params_from_js(driver, channel_name):
-    """从JavaScript中提取KBS认证参数"""
-    try:
-        print("🔍 分析JavaScript代码寻找认证逻辑...")
-        
-        # 获取所有JavaScript代码
-        scripts = driver.find_elements(By.TAG_NAME, 'script')
-        all_js_code = ""
-        
-        for script in scripts:
-            try:
-                js_code = driver.execute_script("return arguments[0].textContent", script)
-                all_js_code += js_code + "\n"
-            except:
-                continue
-        
-        # 查找可能的认证参数
-        patterns = [
-            # 查找Policy参数
-            r'Policy=([A-Za-z0-9_\-~]+)',
-            r'["\']Policy["\'][:\s]*["\']([A-Za-z0-9_\-~]+)["\']',
-            r'policy["\']?\s*:\s*["\']([A-Za-z0-9_\-~]+)["\']',
-            # 查找Signature参数
-            r'Signature=([A-Za-z0-9_\-~]+)',
-            r'["\']Signature["\'][:\s]*["\']([A-Za-z0-9_\-~]+)["\']',
-            r'signature["\']?\s*:\s*["\']([A-Za-z0-9_\-~]+)["\']',
-            # 查找完整的m3u8 URL
-            r'(https?://[^\s"\']*\.m3u8\?[^\s"\']*Policy=[^\s"\']*Signature=[^\s"\']*)',
-            r'["\'](https?://[^"\']*\.m3u8\?[^"\']*Policy=[^"\']*Signature=[^"\']*)["\']',
-        ]
-        
-        found_params = []
-        
-        for pattern in patterns:
-            matches = re.findall(pattern, all_js_code, re.IGNORECASE)
-            for match in matches:
-                if isinstance(match, tuple):
-                    match = match[0]
-                
-                # 检查是否包含必要的参数
-                if 'Policy=' in match and 'Signature=' in match and 'gscdn.kbs.co.kr' in match:
-                    found_params.append(match)
-                    print(f"✅ 从JS找到认证URL: {match[:100]}...")
-                elif 'Policy=' in match or 'Signature=' in match:
-                    # 只找到部分参数
-                    print(f"🔍 找到部分参数: {match[:50]}...")
-        
-        # 如果有找到完整URL，返回第一个
-        if found_params:
-            return found_params[0]
-        
-        # 如果没有找到完整URL，尝试查找分开的参数
-        policy = None
-        signature = None
-        
-        policy_patterns = [
-            r'Policy=([A-Za-z0-9_\-~]+)',
-            r'"Policy":"([A-Za-z0-9_\-~]+)"',
-            r"'Policy':'([A-Za-z0-9_\-~]+)'",
-        ]
-        
-        signature_patterns = [
-            r'Signature=([A-Za-z0-9_\-~]+)',
-            r'"Signature":"([A-Za-z0-9_\-~]+)"',
-            r"'Signature':'([A-Za-z0-9_\-~]+)'",
-        ]
-        
-        for pattern in policy_patterns:
-            matches = re.findall(pattern, all_js_code)
-            if matches:
-                policy = matches[0]
-                break
-        
-        for pattern in signature_patterns:
-            matches = re.findall(pattern, all_js_code)
-            if matches:
-                signature = matches[0]
-                break
-        
-        if policy and signature:
-            print(f"✅ 找到分开的参数: Policy和Signature")
-            return f"Policy={policy}&Signature={signature}"
-        
-        return None
-        
-    except Exception as e:
-        print(f"⚠️ 分析JavaScript时出错: {e}")
-        return None
-
-def execute_kbs_player_js(driver):
-    """执行KBS播放器的JavaScript来获取流媒体地址"""
-    try:
-        print("💻 尝试执行播放器JavaScript...")
-        
-        # 尝试多种方法来触发播放器并获取地址
-        scripts = [
-            # 方法1: 尝试调用播放器API
-            """
-            try {
-                if (window.player && window.player.getSrc) {
-                    return window.player.getSrc();
-                }
-                if (window.videojs && window.videojs.getPlayers()) {
-                    var players = window.videojs.getPlayers();
-                    for (var playerId in players) {
-                        if (players[playerId].src) {
-                            return players[playerId].src();
-                        }
-                    }
-                }
-                return '';
-            } catch(e) {
-                return '';
-            }
-            """,
-            
-            # 方法2: 查找所有视频源
-            """
-            var sources = [];
-            var videos = document.querySelectorAll('video');
-            videos.forEach(function(video) {
-                if (video.src) sources.push(video.src);
-                if (video.currentSrc) sources.push(video.currentSrc);
-            });
-            
-            var sources2 = document.querySelectorAll('source[src*=".m3u8"]');
-            sources2.forEach(function(source) {
-                sources.push(source.src);
-            });
-            
-            return sources.length > 0 ? sources[0] : '';
-            """,
-            
-            # 方法3: 尝试触发播放并获取网络请求
-            """
-            try {
-                // 创建观察者来监控网络请求
-                var originalFetch = window.fetch;
-                var m3u8Url = '';
-                
-                window.fetch = function() {
-                    var url = arguments[0];
-                    if (url && url.includes('.m3u8') && url.includes('kbs')) {
-                        m3u8Url = url;
-                    }
-                    return originalFetch.apply(this, arguments);
-                };
-                
-                // 尝试播放视频
-                var videos = document.querySelectorAll('video');
-                if (videos.length > 0) {
-                    videos[0].play().catch(function(e) {
-                        console.log('Play failed:', e);
-                    });
-                }
-                
-                // 等待一下
-                setTimeout(function() {
-                    return m3u8Url;
-                }, 1000);
-                
-                return m3u8Url;
-            } catch(e) {
-                return '';
-            }
-            """
-        ]
-        
-        for script in scripts:
-            try:
-                result = driver.execute_script(script)
-                if result and '.m3u8' in result and 'gscdn.kbs.co.kr' in result:
-                    print(f"✅ 从播放器JS获取到地址: {result[:100]}...")
-                    return result
-            except Exception as e:
-                continue
-        
-        return None
-        
-    except Exception as e:
-        print(f"⚠️ 执行播放器JS时出错: {e}")
-        return None
-
-def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """获取KBS的m3u8链接 - 综合方法"""
+def get_kbs_m3u8_with_auth(channel_name):
+    """获取带认证参数的KBS m3u8 URL"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
-        # 清除之前的网络日志
-        driver.get_log('performance')
+        if channel_name not in KBS_BASE_URLS:
+            print(f"❌ 未知的KBS频道: {channel_name}")
+            return None
         
-        # 访问页面
-        driver.get(url)
+        base_url = KBS_BASE_URLS[channel_name]
         
-        # 等待页面加载（包括广告）
-        print(f"⏳ 等待 {channel_name} 页面完全加载（25秒）...")
-        time.sleep(25)
-        
-        # 方法1: 尝试从JavaScript中直接提取认证参数
-        print("🔍 方法1: 提取JavaScript中的认证参数...")
-        auth_url = extract_kbs_params_from_js(driver, channel_name)
-        
-        if auth_url:
-            if auth_url.startswith('http'):
-                print(f"✅ 方法1成功: 找到完整认证URL")
-                return auth_url
-            elif 'Policy=' in auth_url and 'Signature=' in auth_url:
-                # 只有参数，需要构建完整URL
-                if channel_name in KBS_BASE_URLS:
-                    base_url = KBS_BASE_URLS[channel_name]
-                    full_url = f"{base_url}?{auth_url}&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA"
-                    print(f"✅ 方法1成功: 构建完整认证URL")
-                    return full_url
-        
-        # 方法2: 尝试执行播放器JavaScript
-        print("🔍 方法2: 执行播放器JavaScript...")
-        player_url = execute_kbs_player_js(driver)
-        
-        if player_url and '.m3u8' in player_url and 'gscdn.kbs.co.kr' in player_url:
-            print(f"✅ 方法2成功: 从播放器获取地址")
-            return player_url
-        
-        # 方法3: 监控网络请求
-        print("🔍 方法3: 监控网络请求...")
-        m3u8_urls = extract_m3u8_from_network_logs(driver, ['gscdn.kbs.co.kr'])
-        
-        # 过滤出认证URL
-        auth_urls = [url for url in m3u8_urls if 'Policy=' in url and 'Signature=' in url]
-        
-        if auth_urls:
-            print(f"✅ 方法3成功: 找到 {len(auth_urls)} 个认证URL")
-            # 优先选择与频道名匹配的URL
-            for url in auth_urls:
-                if channel_name.lower().replace(' ', '') in url.lower():
-                    print(f"🔗 选择匹配URL: {url[:100]}...")
-                    return url
-            print(f"🔗 选择第一个URL: {auth_urls[0][:100]}...")
-            return auth_urls[0]
-        
-        # 方法4: 尝试点击播放按钮并重新监控
-        print("🔍 方法4: 尝试交互操作...")
-        try:
-            # 查找并点击播放按钮
-            play_buttons = driver.find_elements(By.XPATH, 
-                "//button[contains(text(), '재생') or contains(text(), '시청') or contains(text(), 'PLAY') or contains(text(), 'play')] | " +
-                "//a[contains(text(), '재생') or contains(text(), '시청') or contains(text(), 'PLAY') or contains(text(), 'play')] | " +
-                "//div[contains(text(), '재생') or contains(text(), '시청') or contains(text(), 'PLAY') or contains(text(), 'play')]")
+        # 检查是否有认证参数
+        if channel_name in KBS_AUTH_PARAMS:
+            params = KBS_AUTH_PARAMS[channel_name]
+            policy = params.get("Policy")
+            signature = params.get("Signature")
+            key_pair_id = params.get("Key-Pair-Id", "APKAICDSGT3Y7IXGJ3TA")
             
-            for button in play_buttons[:3]:  # 尝试前3个按钮
-                try:
-                    print(f"🖱️ 尝试点击播放按钮: {button.text[:20] if button.text else '无文本'}")
-                    driver.execute_script("arguments[0].click();", button)
-                    time.sleep(5)
-                    
-                    # 点击后重新监控网络
-                    new_urls = extract_m3u8_from_network_logs(driver, ['gscdn.kbs.co.kr'])
-                    new_auth_urls = [url for url in new_urls if 'Policy=' in url and 'Signature=' in url]
-                    
-                    if new_auth_urls:
-                        print(f"✅ 点击后找到认证URL: {new_auth_urls[0][:100]}...")
-                        return new_auth_urls[0]
-                except:
-                    continue
-        except Exception as e:
-            print(f"⚠️ 点击播放按钮时出错: {e}")
+            if policy and signature:
+                # 构建完整的认证URL
+                auth_url = f"{base_url}?Policy={policy}&Key-Pair-Id={key_pair_id}&Signature={signature}"
+                print(f"✅ 使用预定义认证参数: {channel_name}")
+                print(f"🔗 URL长度: {len(auth_url)} 字符")
+                return auth_url
+            else:
+                print(f"⚠️  {channel_name} 的认证参数不完整，使用基础URL")
+        else:
+            print(f"⚠️  未找到 {channel_name} 的认证参数，使用基础URL")
         
-        # 方法5: 刷新页面重试
-        print("🔍 方法5: 刷新页面重试...")
-        driver.refresh()
-        time.sleep(15)
-        
-        # 重新尝试所有方法
-        auth_url = extract_kbs_params_from_js(driver, channel_name)
-        if auth_url and auth_url.startswith('http'):
-            return auth_url
-        
-        # 最终备用方案
-        print(f"❌ 所有方法都失败，使用基础URL: {channel_name}")
-        if channel_name in KBS_BASE_URLS:
-            return KBS_BASE_URLS[channel_name]
-        
-        return None
+        # 返回基础URL
+        print(f"📋 使用基础URL: {channel_name}")
+        return base_url
         
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return None
 
 def get_real_mbn_url_from_response(auth_url):
@@ -500,8 +262,26 @@ def get_mbn_m3u8_multiple_quality(driver):
         target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
         
         # 网络请求监控
-        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
-        m3u8_urls.extend(network_urls)
+        try:
+            logs = driver.get_log('performance')
+            for log in logs:
+                try:
+                    message = json.loads(log['message'])['message']
+                    method = message.get('method')
+                    
+                    if method in ['Network.responseReceived', 'Network.requestWillBeSent']:
+                        request = message['params'].get('request', {})
+                        response = message['params'].get('response', {})
+                        
+                        urls = [request.get('url', ''), response.get('url', '')]
+                        for url in urls:
+                            if url and '.m3u8' in url and any(domain in url for domain in target_domains):
+                                m3u8_urls.append(url)
+                                
+                except Exception:
+                    continue
+        except Exception as e:
+            print(f"⚠️ 读取网络日志时出错: {e}")
         
         # 查找认证代理链接
         auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
@@ -711,9 +491,9 @@ def main():
                 print(f"✅ {channel['name']} - 获取成功（双画质）")
                 continue  # 跳过MBN的常规处理
             else:
-                # KBS频道统一处理
+                # KBS频道统一处理 - 使用预定义的认证参数
                 try:
-                    m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'])
+                    m3u8_url = get_kbs_m3u8_with_auth(channel['name'])
                     if m3u8_url:
                         dynamic_channels.append({
                             'name': channel['name'],
