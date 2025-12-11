@@ -1,20 +1,11 @@
 #EXTM3U
-# 自动生成时间: 2025-12-11 16:48:05
-
-#EXTINF:-1 tvg-id="KBS1.kr",KBS1
-https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8
-
-#EXTINF:-1 tvg-id="KBS2.kr",KBS2
-https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8
-
-#EXTINF:-1 tvg-id="KBS24.kr",KBS 24
-https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8
+# Updated: 2025-12-11 16:59:01
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTU1Nzk5Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=KeyqI0nm7ruTcBm0imQUGVs3PDdypDNBREMlithBW3ZxoooR2ieM-skjVz4HobGZaCk7pB96Fj5CSwZAeR8Wv844o-T6vYf9Vs5oOCLeMdoKuQx0tmm5ickfxRWDJJosrcT6lFSgZr76-~bVxVTHiCAXEpoPK9h~QyOoCU3N9-8_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTU1ODczOX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=KejMLhncLvYbvjXjGIwO98uOebJS6c4GcXR-VQUDAcBeaUh-mtf9TLEg0pdyXW6CqXUJl3EBXN~yAUbRP4a~QEa1ZJdNEkPECv8gU3eJd3gsDZOwjSfPscE1rYRw~L3y-dXGEFz~2fVFS7tqG-TIxI4xqeE1YrSGPTHCwxje-pI_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTU1Nzk5N30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=N3L7pbS12m~wyXYbBdXLS-R7s3-vN0~p5z-40FKJ4NrbqMwDhCHLh17~HJo6zXXizEfYhara2gnMk3vllnmrkUw7k2gTgjqh6a9VkGHc44y5KrTu0ruYN5bq1PtmduyPpmiPHokHwdQ1PCliEO9q5axxrlclhJEyIXu-TVqM0yc_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NTU1ODc0MX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=OQf2EcBcc~JEjsD9JnJeERPUDQ0~zWYOcpUgIe1htdybZ3dpjnQJpiq0pWf5Xm5Q64~F5f9XYQXbEnuHM3CxgOt5jt6bsotqXHmFIWwC9uK8mO0Q~WpCy0amoXu6Zfu1wihRjLBzDVb3mR4l5opTJzhV3J9Dz3SJfjS8OU~j5og_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
@@ -53,15 +44,3 @@ https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8
 
 #EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천
 https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8
-
-#EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA
-https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY
-https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY
-https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE
-https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8
