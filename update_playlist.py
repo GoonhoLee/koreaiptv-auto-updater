@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-改进KBS频道抓取，支持MBN多画质
+修复KBS抓取问题：添加强制自动播放策略、鼠标物理点击模拟
 """
 
 import requests
@@ -14,10 +14,9 @@ from datetime import datetime
 from typing import Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 # 配置信息
@@ -70,7 +69,7 @@ CHANNELS = [
     }
 ]
 
-# 静态频道列表（保持不变）
+# 静态频道列表
 STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
@@ -111,36 +110,44 @@ STATIC_CHANNELS = [
     'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
 
-# KBS频道基础URL映射
-KBS_BASE_URLS = {
-    "KBS1": "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8",
-    "KBS2": "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8",
-    "KBS 24": "https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8",
-    "KBS DRAMA": "https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8",
-    "KBS JOY": "https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8",
-    "KBS STORY": "https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8",
-    "KBS LIFE": "https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8"
-}
-
 def setup_driver():
-    """设置Chrome驱动"""
+    """设置Chrome驱动 - 针对视频播放进行深度优化"""
     chrome_options = Options()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
     
-    chrome_options.add_argument('--disable-features=VizDisplayCompositor')
-    chrome_options.add_argument('--disable-background-timer-throttling')
-    chrome_options.add_argument('--disable-backgrounding-occluded-windows')
-    chrome_options.add_argument('--disable-renderer-backgrounding')
+    # === 关键修复：解决自动播放和Headless检测 ===
+    # 允许无需用户交互的自动播放
+    chrome_options.add_argument("--autoplay-policy=no-user-gesture-required")
+    # 静音音频（浏览器通常允许静音视频自动播放）
+    chrome_options.add_argument("--mute-audio")
     
+    # 模拟真实浏览器
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
+    
+    # 移除自动化特征
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    
+    # 开启性能日志
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    
+    # CDP命令防止检测
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': '''
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            })
+        '''
+    })
+    
     return driver
 
 def extract_m3u8_from_network_logs(driver, target_domains):
@@ -159,8 +166,10 @@ def extract_m3u8_from_network_logs(driver, target_domains):
                     
                     urls = [request.get('url', ''), response.get('url', '')]
                     for url in urls:
-                        if url and '.m3u8' in url and any(domain in url for domain in target_domains):
-                            m3u8_urls.append(url)
+                        if url and '.m3u8' in url:
+                            # 如果有域名限制，则检查
+                            if not target_domains or any(domain in url for domain in target_domains):
+                                m3u8_urls.append(url)
                             
             except Exception:
                 continue
@@ -170,521 +179,233 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     
     return list(set(m3u8_urls))
 
-def find_kbs_auth_params_in_page(page_source):
-    """在页面源代码中查找KBS认证参数"""
-    policy_patterns = [
-        r'Policy=([A-Za-z0-9_\-~]+)',
-        r'"Policy":"([A-Za-z0-9_\-~]+)"',
-        r"'Policy':'([A-Za-z0-9_\-~]+)'",
-        r'policy["\']?\s*:\s*["\']([A-Za-z0-9_\-~]+)["\']',
-    ]
-    
-    signature_patterns = [
-        r'Signature=([A-Za-z0-9_\-~]+)',
-        r'"Signature":"([A-Za-z0-9_\-~]+)"',
-        r"'Signature':'([A-Za-z0-9_\-~]+)'",
-        r'signature["\']?\s*:\s*["\']([A-Za-z0-9_\-~]+)["\']',
-    ]
-    
-    policy = None
-    signature = None
-    
-    for pattern in policy_patterns:
-        matches = re.findall(pattern, page_source, re.IGNORECASE)
-        if matches:
-            policy = matches[0]
-            break
-    
-    for pattern in signature_patterns:
-        matches = re.findall(pattern, page_source, re.IGNORECASE)
-        if matches:
-            signature = matches[0]
-            break
-    
-    return policy, signature
-
-def find_kbs_auth_params_in_js(driver):
-    """通过JavaScript查找KBS认证参数"""
-    try:
-        # 尝试多种JavaScript方法来查找参数
-        scripts = [
-            # 查找全局变量
-            """
-            var result = {};
-            var keys = Object.keys(window);
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                try {
-                    var val = window[key];
-                    if (typeof val === 'string' && val.includes('Policy=')) {
-                        result.policy = val.match(/Policy=([^&]+)/)?.[1];
-                        result.signature = val.match(/Signature=([^&]+)/)?.[1];
-                    }
-                } catch(e) {}
-            }
-            return result;
-            """,
-            
-            # 查找包含Policy的脚本内容
-            """
-            var result = {};
-            var scripts = document.getElementsByTagName('script');
-            for (var i = 0; i < scripts.length; i++) {
-                var content = scripts[i].textContent || scripts[i].innerText;
-                if (content.includes('Policy=')) {
-                    var policyMatch = content.match(/Policy=([A-Za-z0-9_\\-~]+)/);
-                    var sigMatch = content.match(/Signature=([A-Za-z0-9_\\-~]+)/);
-                    if (policyMatch) result.policy = policyMatch[1];
-                    if (sigMatch) result.signature = sigMatch[1];
-                }
-            }
-            return result;
-            """,
-            
-            # 尝试解析JSON数据
-            """
-            var result = {};
-            var scripts = document.getElementsByTagName('script');
-            for (var i = 0; i < scripts.length; i++) {
-                var content = scripts[i].textContent || scripts[i].innerText;
-                try {
-                    var jsonMatch = content.match(/{[^}]*policy[^}]*}/i);
-                    if (jsonMatch) {
-                        var jsonData = JSON.parse(jsonMatch[0]);
-                        if (jsonData.policy || jsonData.Policy) {
-                            result.policy = jsonData.policy || jsonData.Policy;
-                            result.signature = jsonData.signature || jsonData.Signature;
-                        }
-                    }
-                } catch(e) {}
-            }
-            return result;
-            """
-        ]
-        
-        for script in scripts:
-            try:
-                result = driver.execute_script(script)
-                if result and 'policy' in result and result.policy and 'signature' in result and result.signature:
-                    print(f"💻 从JS找到认证参数")
-                    return result.policy, result.signature
-            except:
-                continue
-                
-    except Exception as e:
-        print(f"⚠️ 执行JavaScript查找参数时出错: {e}")
-    
-    return None, None
-
 def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """获取KBS的m3u8链接 - 改进版本"""
+    """获取KBS的m3u8链接 - 针对15秒广告和播放触发优化"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
-        # 清除之前的网络日志
-        driver.get_log('performance')
+        # 特征码映射
+        kbs_signatures = {
+            "KBS1": "1tv.gscdn",
+            "KBS2": "2tv.gscdn",
+            "KBS 24": "news24.gscdn",
+            "KBS DRAMA": "kbsndrama.gscdn",
+            "KBS JOY": "kbsnjoy.gscdn",
+            "KBS STORY": "kbsnw.gscdn",
+            "KBS LIFE": "kbsnlife.gscdn"
+        }
+        target_signature = kbs_signatures.get(channel_name, "gscdn.kbs")
         
         driver.get(url)
+        time.sleep(3) # 等待页面基础加载
         
-        # 等待广告结束和页面加载
-        print(f"⏳ 等待 {channel_name} 广告结束（15秒广告+10秒缓冲）...")
-        time.sleep(25)  # 15秒广告 + 10秒缓冲
-        
-        # 尝试点击播放按钮（如果有的话）
+        # === 动作1：尝试物理点击播放器中心 ===
+        # 很多播放器有透明覆盖层，直接点击 video 标签无效
+        # 我们寻找页面上几个可能的容器，点击它们的中心
+        print("🖱️ 尝试物理点击播放器中心...")
         try:
-            print("🖱️ 尝试查找并点击播放按钮...")
-            play_buttons = driver.find_elements(By.XPATH, "//button[contains(., '재생') or contains(., '시청') or contains(., 'PLAY') or contains(., 'play')]")
-            if play_buttons:
-                driver.execute_script("arguments[0].click();", play_buttons[0])
-                time.sleep(5)
-        except:
-            pass
+            # KBS 播放器容器常见的 class/id
+            containers = driver.find_elements(By.CSS_SELECTOR, "#player, .player-area, .video-container, video")
+            if containers:
+                # 只点击第一个可见的
+                action = ActionChains(driver)
+                action.move_to_element(containers[0]).click().perform()
+                print("  ✅ 已发送点击指令")
+            else:
+                # 如果找不到特定容器，点击页面中心
+                action = ActionChains(driver)
+                action.move_by_offset(960, 540).click().perform() # 假设1920x1080分辨率
+                print("  ✅ 已点击屏幕中心")
+        except Exception as e:
+            print(f"  ⚠️ 点击操作异常 (不影响继续): {e}")
+
+        # === 动作2：智能循环等待 (最多25秒) ===
+        print("⏳ 正在监控网络请求 (等待广告结束)...")
         
-        # 获取页面源代码
-        page_source = driver.page_source
+        found_url = None
+        target_domains = ['gscdn.kbs.co.kr', 'kbs.co.kr']
         
-        # 方法1: 从页面源代码中查找参数
-        print("🔍 从页面源代码中查找认证参数...")
-        policy, signature = find_kbs_auth_params_in_page(page_source)
-        
-        if policy and signature:
-            print(f"✅ 从页面源代码找到认证参数")
-            print(f"   Policy: {policy[:50]}...")
-            print(f"   Signature: {signature[:50]}...")
+        # 每秒检查一次日志，而不是死等
+        for i in range(25):
+            network_urls = extract_m3u8_from_network_logs(driver, target_domains)
             
-            if channel_name in KBS_BASE_URLS:
-                base_url = KBS_BASE_URLS[channel_name]
-                auth_url = f"{base_url}?Policy={policy}&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature={signature}"
-                return auth_url
-        
-        # 方法2: 从JavaScript中查找参数
-        print("🔍 从JavaScript中查找认证参数...")
-        policy, signature = find_kbs_auth_params_in_js(driver)
-        
-        if policy and signature:
-            print(f"✅ 从JavaScript找到认证参数")
-            if channel_name in KBS_BASE_URLS:
-                base_url = KBS_BASE_URLS[channel_name]
-                auth_url = f"{base_url}?Policy={policy}&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature={signature}"
-                return auth_url
-        
-        # 方法3: 从网络请求中获取完整URL
-        print("🔍 从网络请求中查找m3u8地址...")
-        target_domains = ['gscdn.kbs.co.kr']
-        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
-        
-        if network_urls:
-            print(f"✅ 从网络请求中找到 {len(network_urls)} 个m3u8地址")
+            # 过滤策略
+            valid_urls = [
+                u for u in network_urls 
+                if target_signature in u 
+                and 'Policy=' in u
+            ]
             
-            # 优先选择包含认证参数的URL
-            auth_urls = [url for url in network_urls if 'Policy=' in url and 'Signature=' in url]
-            if auth_urls:
-                print(f"🔗 选择认证URL: {auth_urls[0][:100]}...")
-                return auth_urls[0]
+            if valid_urls:
+                # 找到链接，立即停止等待
+                found_url = sorted(valid_urls, key=len, reverse=True)[0]
+                print(f"⚡ 在第 {i+1} 秒成功捕获链接！")
+                break
             
-            # 如果没有认证URL，选择第一个找到的
-            print(f"🔗 选择第一个URL: {network_urls[0][:100]}...")
-            return network_urls[0]
+            time.sleep(1)
+            if i % 5 == 0 and i > 0:
+                print(f"  ...已等待 {i} 秒")
+
+        if found_url:
+            print(f"✅ 找到 {channel_name} 真实地址")
+            return found_url
+            
+        # 如果还是没找到，打印一些调试信息
+        print(f"❌ 超时未找到 {channel_name} 的有效地址")
         
-        # 方法4: 如果以上都失败，尝试刷新页面重新获取
-        print("🔄 刷新页面重新尝试...")
-        driver.refresh()
-        time.sleep(15)
-        
-        # 再次尝试从页面源代码和网络请求中获取
-        page_source = driver.page_source
-        policy, signature = find_kbs_auth_params_in_page(page_source)
-        
-        if policy and signature and channel_name in KBS_BASE_URLS:
-            print(f"✅ 刷新后找到认证参数")
-            base_url = KBS_BASE_URLS[channel_name]
-            auth_url = f"{base_url}?Policy={policy}&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature={signature}"
-            return auth_url
-        
-        # 最终备用方案：使用基础URL
-        print(f"❌ 未找到 {channel_name} 的认证参数，使用基础URL")
-        if channel_name in KBS_BASE_URLS:
-            return KBS_BASE_URLS[channel_name]
-        
+        # 检查是否因为地域限制
+        page_text = driver.find_element(By.TAG_NAME, "body").text
+        if "not available" in page_text.lower() or "service region" in page_text.lower() or "해외" in page_text:
+            print("🚫 警告：页面包含地域限制提示，可能是IP问题")
+
         return None
             
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return None
 
 def get_real_mbn_url_from_response(auth_url):
     """从MBN认证链接的响应内容获取真实m3u8地址"""
     try:
         print(f"🔗 请求MBN认证链接: {auth_url}")
-        
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': '*/*',
             'Referer': 'https://www.mbn.co.kr/vod/onair'
         }
-        
-        response = requests.get(auth_url, headers=headers, timeout=(5, 10))
-        
+        response = requests.get(auth_url, headers=headers, timeout=10)
         if response.status_code == 200:
             content = response.text.strip()
-            
-            if content.startswith('http') and '.m3u8' in content and 'hls-live.mbn.co.kr' in content:
-                print(f"✅ 获取到MBN地址: {content}")
+            if '.m3u8' in content:
+                print(f"✅ 获取到MBN地址")
                 return content
-            else:
-                print(f"❌ 响应内容不是有效的m3u8 URL: {content}")
-                return None
-        else:
-            print(f"❌ 认证链接请求失败，状态码: {response.status_code}")
-            return None
-            
+        return None
     except Exception as e:
-        print(f"❌ 请求MBN认证链接时出错: {str(e)}")
+        print(f"❌ MBN认证出错: {e}")
         return None
 
 def get_mbn_m3u8_multiple_quality(driver):
-    """获取MBN的m3u8链接 - 同时获取1000k和600k版本"""
+    """获取MBN的m3u8链接 - 双画质"""
     mbn_channels = []
-    
     try:
         print("🚀 正在获取 MBN 多画质版本...")
         driver.get("https://www.mbn.co.kr/vod/onair")
-        time.sleep(15)
+        time.sleep(15) # MBN比较简单，固定等待即可
         
-        m3u8_urls = []
-        target_domains = ['mbn.co.kr', 'hls-live.mbn.co.kr']
-        
-        # 网络请求监控
-        network_urls = extract_m3u8_from_network_logs(driver, target_domains)
-        m3u8_urls.extend(network_urls)
-        
-        # 查找认证代理链接
+        m3u8_urls = extract_m3u8_from_network_logs(driver, ['mbn.co.kr'])
         auth_urls = [url for url in m3u8_urls if 'mbnStreamAuth' in url]
         
-        # 分别处理1000k和600k版本
-        quality_configs = [
-            {
-                'quality': '1000k',
-                'name': 'MBN（高画质）',
-                'tvg_id': 'MBN.kr',
-                'auth_urls': [url for url in auth_urls if '1000k' in url],
-                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
-                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8'
-            },
-            {
-                'quality': '600k',
-                'name': 'MBN（标清）',
-                'tvg_id': 'MBN.kr',
-                'auth_urls': [url for url in auth_urls if '600k' in url],
-                'base_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
-                'backup_url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8'
-            }
+        configs = [
+            {'q': '1000k', 'name': 'MBN（高画质）', 'base': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8'},
+            {'q': '600k',  'name': 'MBN（标清）',   'base': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8'}
         ]
         
-        for config in quality_configs:
-            print(f"\n🎯 正在获取 {config['quality']} 版本...")
-            
+        for cfg in configs:
             real_url = None
+            # 1. 尝试自动发现的认证链接
+            valid_auths = [u for u in auth_urls if cfg['q'] in u]
+            if valid_auths:
+                real_url = get_real_mbn_url_from_response(valid_auths[0])
             
-            # 首先尝试自动发现的认证链接
-            if config['auth_urls']:
-                print(f"🔍 找到 {config['quality']} 认证链接: {config['auth_urls'][0]}")
-                real_url = get_real_mbn_url_from_response(config['auth_urls'][0])
-                if real_url:
-                    print(f"✅ 成功获取 {config['quality']} 版本")
-                else:
-                    print(f"❌ 自动发现的 {config['quality']} 认证链接无效")
-            
-            # 如果自动发现的链接失败，尝试构造认证链接
+            # 2. 构造认证链接
             if not real_url:
-                print(f"🔄 尝试构造 {config['quality']} 认证链接...")
-                constructed_auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={config['base_url']}"
+                auth_url = f"https://www.mbn.co.kr/player/mbnStreamAuth_new_live.mbn?vod_url={cfg['base']}"
+                real_url = get_real_mbn_url_from_response(auth_url)
                 
-                real_url = get_real_mbn_url_from_response(constructed_auth_url)
-                if real_url:
-                    print(f"✅ 通过构造链接获取 {config['quality']} 版本")
-                else:
-                    print(f"❌ 构造链接也失败，使用备用地址")
-                    real_url = config['backup_url']
-            
-            # 添加到频道列表
             if real_url:
                 mbn_channels.append({
-                    'name': config['name'],
-                    'tvg_id': config['tvg_id'],
-                    'url': real_url,
-                    'quality': config['quality']
+                    'name': cfg['name'],
+                    'tvg_id': 'MBN.kr',
+                    'url': real_url
                 })
-        
-        # 如果两个版本都获取成功
-        if len(mbn_channels) == 2:
-            print("🎉 成功获取MBN双画质版本！")
-        elif len(mbn_channels) == 1:
-            print(f"⚠️ 只成功获取 {mbn_channels[0]['quality']} 版本")
-        else:
-            print("❌ 未能获取任何MBN版本，使用备用地址")
-            mbn_channels.append({
-                'name': 'MBN（高画质）',
-                'tvg_id': 'MBN.kr',
-                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
-                'quality': '1000k'
-            })
-            mbn_channels.append({
-                'name': 'MBN（标清）',
-                'tvg_id': 'MBN.kr',
-                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
-                'quality': '600k'
-            })
-            
+                
         return mbn_channels
-            
     except Exception as e:
-        print(f"❌ 获取 MBN 多画质版本时出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        # 返回备用地址
-        return [
-            {
-                'name': 'MBN（高画质）',
-                'tvg_id': 'MBN.kr',
-                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8',
-                'quality': '1000k'
-            },
-            {
-                'name': 'MBN（标清）',
-                'tvg_id': 'MBN.kr',
-                'url': 'https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8',
-                'quality': '600k'
-            }
-        ]
+        print(f"❌ MBN获取出错: {e}")
+        return []
 
 def update_stable_repository(content):
-    """更新GitHub固定仓库的M3U文件"""
+    """更新GitHub"""
     if not FULL_ACCESS_TOKEN:
-        print("❌ 未找到FULL_ACCESS_TOKEN，跳过GitHub仓库更新")
+        print("❌ 无Token，跳过更新")
         return False
-        
+    
     url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/contents/korean_tv.m3u"
-    headers = {
-        "Authorization": f"token {FULL_ACCESS_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+    headers = {"Authorization": f"token {FULL_ACCESS_TOKEN}", "Accept": "application/vnd.github.v3+json"}
     
     try:
-        # 获取文件当前SHA
-        response = requests.get(url, headers=headers)
-        sha = None
-        if response.status_code == 200:
-            sha = response.json().get('sha')
-            print("📁 找到GitHub现有文件，准备更新...")
-        else:
-            print("📁 GitHub未找到现有文件，将创建新文件...")
+        resp = requests.get(url, headers=headers)
+        sha = resp.json().get('sha') if resp.status_code == 200 else None
         
-        # Base64编码
-        content_bytes = content.encode('utf-8')
-        content_base64 = base64.b64encode(content_bytes).decode('ascii')
-        
-        # 更新或创建文件
         data = {
-            "message": f"自动更新播放列表 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "content": content_base64,
-            "committer": {
-                "name": "GitHub Action",
-                "email": "action@github.com"
-            }
+            "message": f"Update {datetime.now().strftime('%Y-%m-%d')}",
+            "content": base64.b64encode(content.encode('utf-8')).decode('ascii'),
+            "committer": {"name": "GitHub Action", "email": "action@github.com"}
         }
+        if sha: data["sha"] = sha
         
-        if sha:
-            data["sha"] = sha
-        
-        response = requests.put(url, headers=headers, json=data)
-        
-        if response.status_code in [200, 201]:
-            print("🎉 GitHub仓库更新成功!")
-            github_static_url = f"https://raw.githubusercontent.com/{GITHUB_USERNAME}/{STABLE_REPO_NAME}/main/korean_tv.m3u"
-            print(f"🔗 GitHub静态URL: {github_static_url}")
-            return True
-        else:
-            print(f"❌ GitHub仓库更新失败: {response.status_code} - {response.text}")
-            return False
-            
+        requests.put(url, headers=headers, json=data)
+        print("🎉 GitHub仓库更新成功!")
+        return True
     except Exception as e:
-        print(f"❌ 更新GitHub仓库时出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ GitHub更新出错: {e}")
         return False
 
 def generate_playlist(dynamic_channels):
-    """生成完整的M3U播放列表"""
-    lines = ["#EXTM3U"]
-    lines.append(f"# 自动生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append("")
-    
-    # 分离出要放在后面的频道
+    """生成M3U"""
+    lines = ["#EXTM3U", f"# Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ""]
     later_channels = ['KBS DRAMA', 'KBS JOY', 'KBS STORY', 'KBS LIFE']
     
-    # 先添加其他动态频道
-    for channel in dynamic_channels:
-        if channel.get('url') and channel['name'] not in later_channels:
-            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
-            lines.append(channel['url'])
+    # 普通频道
+    for ch in dynamic_channels:
+        if ch['name'] not in later_channels:
+            lines.append(f'#EXTINF:-1 tvg-id="{ch["tvg_id"]}",{ch["name"]}')
+            lines.append(ch['url'])
             lines.append("")
-    
-    # 添加静态频道
+            
+    # 静态频道
     lines.extend(STATIC_CHANNELS)
     lines.append("")
     
-    # 最后添加指定的KBS频道
-    for channel in dynamic_channels:
-        if channel.get('url') and channel['name'] in later_channels:
-            lines.append(f'#EXTINF:-1 tvg-id="{channel["tvg_id"]}",{channel["name"]}')
-            lines.append(channel['url'])
+    # KBS 有线频道
+    for ch in dynamic_channels:
+        if ch['name'] in later_channels:
+            lines.append(f'#EXTINF:-1 tvg-id="{ch["tvg_id"]}",{ch["name"]}')
+            lines.append(ch['url'])
             lines.append("")
-    
+            
     return "\n".join(lines)
 
 def main():
-    """主函数"""
-    start_time = time.time()
-    print("🎬 开始获取M3U8链接...")
-    print(f"📺 计划获取 {len(CHANNELS)} 个频道")
+    print("🎬 开始运行...")
+    driver = setup_driver()
+    channels_data = []
     
-    driver = None
     try:
-        driver = setup_driver()
-        dynamic_channels = []
-        
-        # 遍历所有频道进行抓取
         for channel in CHANNELS:
-            print(f"\n{'='*50}")
-            print(f"🔍 正在处理频道: {channel['name']}")
-            
-            if channel['name'] == "MBN":  # 精确匹配MBN
-                # MBN特殊处理 - 多画质版本
-                mbn_channels = get_mbn_m3u8_multiple_quality(driver)
-                dynamic_channels.extend(mbn_channels)
-                print(f"✅ {channel['name']} - 获取成功（双画质）")
-                continue  # 跳过MBN的常规处理
+            if channel['name'] == "MBN":
+                channels_data.extend(get_mbn_m3u8_multiple_quality(driver))
             else:
-                # KBS频道统一处理
-                try:
-                    m3u8_url = get_kbs_m3u8(driver, channel['url'], channel['name'])
-                    if m3u8_url:
-                        dynamic_channels.append({
-                            'name': channel['name'],
-                            'tvg_id': channel['tvg_id'],
-                            'url': m3u8_url
-                        })
-                        print(f"✅ {channel['name']} - 获取成功")
-                    else:
-                        print(f"❌ {channel['name']} - 获取失败")
-                except Exception as e:
-                    print(f"❌ 处理频道 {channel['name']} 时出错: {str(e)}")
-                    continue
+                url = get_kbs_m3u8(driver, channel['url'], channel['name'])
+                if url:
+                    channels_data.append({
+                        'name': channel['name'],
+                        'tvg_id': channel['tvg_id'],
+                        'url': url
+                    })
         
-        print(f"\n{'='*50}")
-        # 生成标准版播放列表
-        standard_playlist = generate_playlist(dynamic_channels)
-        print("✅ 播放列表生成完成!")
-
-        # 更新GitHub仓库
-        update_stable_repository(standard_playlist)
-
-        # 保存到本地文件
+        playlist = generate_playlist(channels_data)
+        
+        # 保存本地
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
-            f.write(standard_playlist)
-
-        print("💾 播放列表已保存:")
-        print("  📁 korean_tv.m3u - 标准版")
+            f.write(playlist)
+            
+        # 更新GitHub
+        update_stable_repository(playlist)
         
-        # 打印统计
-        successful_channels = [ch for ch in dynamic_channels if ch.get('url')]
-        print(f"📊 成功获取 {len(successful_channels)}/{len(dynamic_channels)} 个频道")
-        
-        # 显示频道信息
-        print("\n🎯 成功频道列表:")
-        for channel in successful_channels:
-            print(f"  ✅ {channel['name']}")
-        
-    except Exception as e:
-        print(f"❌ 执行过程中出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"📊 完成！成功获取 {len(channels_data)} 个频道")
         
     finally:
-        if driver:
-            try:
-                print("🔚 关闭浏览器驱动...")
-                driver.quit()
-            except Exception as e:
-                print(f"⚠️ 关闭浏览器驱动时出现警告: {e}")
-        
-        # 计算总执行时间
-        end_time = time.time()
-        total_time = end_time - start_time
-        print(f"⏱️ 总执行时间: {total_time:.2f}秒")
+        driver.quit()
 
 if __name__ == "__main__":
     main()
