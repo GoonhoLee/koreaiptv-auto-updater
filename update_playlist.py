@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-修复KBS抓取问题：解决 move target out of bounds 错误，改用 JS 注入控制播放
+修复KBS抓取问题：切换为移动端 User-Agent，强制加载 HTML5 播放器
 """
 
 import requests
@@ -111,36 +111,24 @@ STATIC_CHANNELS = [
 ]
 
 def setup_driver():
-    """设置Chrome驱动"""
+    """设置Chrome驱动 - 模拟 iPhone"""
     chrome_options = Options()
-    chrome_options.add_argument('--headless=new') # 使用新版headless模式
+    chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--start-maximized') # 尝试最大化
-    chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--window-size=375,812') # iPhone X 尺寸
     
-    # 自动播放策略
+    # 模拟 iPhone User-Agent
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1')
+    
+    # 自动播放设置
     chrome_options.add_argument("--autoplay-policy=no-user-gesture-required")
     chrome_options.add_argument("--mute-audio")
     
-    # 模拟真实浏览器
-    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
-    
-    # 开启日志
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
-    
-    # 反检测
-    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-        'source': '''
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => undefined
-            })
-        '''
-    })
     
     return driver
 
@@ -170,10 +158,11 @@ def extract_m3u8_from_network_logs(driver, target_domains):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """获取KBS的m3u8链接 - 纯JS操作版"""
+    """获取KBS的m3u8链接 - 移动端模拟版"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
+        # 特征码映射
         kbs_signatures = {
             "KBS1": "1tv.gscdn",
             "KBS2": "2tv.gscdn",
@@ -186,32 +175,24 @@ def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optio
         target_signature = kbs_signatures.get(channel_name, "gscdn.kbs")
         
         driver.get(url)
+        time.sleep(3) # 等待页面加载
         
-        # 1. 等待视频标签出现 (最多10秒)
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.TAG_NAME, "video"))
-            )
-        except:
-            print("  ⚠️ 未找到video标签，页面可能加载缓慢")
-
-        # 2. 使用JavaScript强制触发播放 (不依赖鼠标坐标)
-        print("💻 执行JS强制播放...")
+        # 1. 尝试暴力点击所有看起来像播放按钮的东西 (JS注入)
+        # 移动端通常有一个巨大的覆盖层按钮
+        print("👆 尝试点击播放按钮 (JS)...")
         driver.execute_script("""
-            // 策略1: 找到所有video标签强制播放
-            var vids = document.querySelectorAll('video');
-            vids.forEach(v => { 
-                v.muted = true; 
-                v.autoplay = true;
-                v.play().catch(e => console.log(e)); 
-            });
-            
-            // 策略2: 点击常见的播放按钮层
-            var buttons = document.querySelectorAll('.vjs-big-play-button, .btn-play, .btn_play, button[title="Play"]');
-            buttons.forEach(b => b.click());
+            var buttons = document.querySelectorAll('[class*="play"], [id*="play"], button, .vjs-big-play-button, a[href="#"]');
+            for(var i=0; i<buttons.length; i++){
+                var rect = buttons[i].getBoundingClientRect();
+                // 排除不可见的元素
+                if(rect.width > 0 && rect.height > 0) {
+                    try { buttons[i].click(); } catch(e){}
+                }
+            }
         """)
         
-        # 3. 循环等待网络请求
+        # 2. 循环等待网络请求 (20秒)
+        # 移动端不一定有 <video> 标签，有时是直接 iframe 加载
         print("⏳ 监控网络请求 (20秒)...")
         found_url = None
         target_domains = ['gscdn.kbs.co.kr', 'kbs.co.kr']
@@ -231,13 +212,6 @@ def get_kbs_m3u8(driver: webdriver.Chrome, url: str, channel_name: str) -> Optio
                 print(f"⚡ 成功捕获链接！(耗时 {i}s)")
                 break
             
-            # 备选：如果不带特定签名但有Policy (应对域名变更)
-            if i > 15:
-                loose_urls = [u for u in network_urls if 'Policy=' in u and 'gscdn' in u]
-                if loose_urls:
-                    found_url = loose_urls[0]
-                    break
-
             time.sleep(1)
 
         if found_url:
