@@ -47,11 +47,12 @@ CHANNELS = [
         "url": "https://www.mbn.co.kr/vod/onair",
         "tvg_id": "MBN.kr"
     },
-    {
-        "name": "JTBC",
-        "url": "https://onair.jtbc.co.kr/",
-        "tvg_id": "JTBC.kr"
-    },
+    # JTBC暂时注释掉，因为可能需要特定网络环境
+    # {
+    #     "name": "JTBC",
+    #     "url": "https://onair.jtbc.co.kr/",
+    #     "tvg_id": "JTBC.kr"
+    # },
     # 以下频道放在最后面
     {
         "name": "KBS DRAMA",
@@ -75,7 +76,7 @@ CHANNELS = [
     }
 ]
 
-# 静态频道列表（保持不变）
+# 静态频道列表（更新：添加JTBC静态源）
 STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
@@ -107,7 +108,10 @@ STATIC_CHANNELS = [
     'https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천',
-    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
+    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8',
+    '',
+    '#EXTINF:-1 tvg-id="JTBC.kr",JTBC',
+    'https://jtbclive-cdn.jtbc.co.kr/pcweb/newpcweb.stream/chunklist.m3u8?Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHAqOi8vanRiY2xpdmUtY2RuLmp0YmMuY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2ODYwNjIzMH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=ZdxxAlLyvlBEJHh6YuT2Ne7bNg0EjrA7XdXyxIX9wytnkCl32y7VoD6~YsEYXjbcWMOfiHUz~pBAXk2ZQYukJAP5ueN9PR~Ju5jfD2ZyaQClq9VWxM-d67ydlmzRxBwEcQzi5uG6kGJ7fnUbcXVrNeXQiQ3JnB174mIMRCCpfB8_&Key-Pair-Id=pub_jtbclive-cdn.jtbc.co.kr'
 ]
 
 # KBS频道基础URL映射
@@ -396,228 +400,6 @@ def wait_for_kbs_advertisement(driver):
                 print(f"  检查页面状态时出错: {e}")
     
     print("✅ 广告等待结束")
-
-def get_jtbc_m3u8(driver: webdriver.Chrome) -> Optional[str]:
-    """获取JTBC的m3u8链接"""
-    try:
-        print("🎬 正在获取 JTBC...")
-        
-        # 清除之前的网络日志
-        driver.get_log('performance')
-        
-        # 访问JTBC直播页面
-        print("🌐 访问 JTBC 直播页面...")
-        driver.get("https://onair.jtbc.co.kr/")
-        
-        # 等待页面完全加载
-        print("⏳ 等待页面完全加载...")
-        time.sleep(10)
-        
-        # 监控网络请求
-        print("📡 监控网络请求...")
-        m3u8_urls = extract_m3u8_from_network_logs(driver, ['jtbclive-cdn.jtbc.co.kr'])
-        
-        # 过滤出认证URL
-        auth_urls = [url for url in m3u8_urls if 'Policy=' in url and 'Signature=' in url]
-        
-        if auth_urls:
-            print(f"✅ 从网络请求找到 {len(auth_urls)} 个认证URL")
-            selected_url = auth_urls[0]
-            print(f"🔗 找到: {selected_url[:100]}...")
-            return selected_url
-        
-        # 如果没找到，尝试深度分析页面
-        print("🔍 深度分析页面内容...")
-        page_source = driver.page_source
-        
-        # 使用正则表达式搜索JTBC特定的m3u8链接
-        patterns = [
-            # 完整的JTBC m3u8链接模式
-            r'(https?://jtbclive-cdn\.jtbc\.co\.kr/[^"\'\s]*\.m3u8\?[^"\'\s]*Policy=[^"\'\s]*Signature=[^"\'\s]*)',
-            # Policy参数模式
-            r'Policy=([A-Za-z0-9_\-~]+)',
-            # Signature参数模式
-            r'Signature=([A-Za-z0-9_\-~]+)',
-            # JTBC视频配置
-            r'"streamUrl"\s*:\s*"([^"]*jtbclive[^"]*\.m3u8[^"]*)"',
-            r'"src"\s*:\s*"([^"]*jtbclive[^"]*\.m3u8[^"]*)"',
-        ]
-        
-        # 提取基础URL、Policy和Signature
-        base_url = None
-        policy = None
-        signature = None
-        key_pair_id = "pub_jtbclive-cdn.jtbc.co.kr"
-        
-        for pattern in patterns:
-            matches = re.findall(pattern, page_source)
-            for match in matches:
-                if isinstance(match, str):
-                    if '.m3u8' in match and 'jtbclive-cdn.jtbc.co.kr' in match:
-                        print(f"✅ 找到完整URL: {match[:100]}...")
-                        return match
-                    elif 'Policy=' in match:
-                        # 这是Policy参数
-                        policy_match = re.search(r'Policy=([A-Za-z0-9_\-~]+)', match)
-                        if policy_match:
-                            policy = policy_match.group(1)
-                            print(f"🔍 找到Policy参数")
-                    elif 'Signature=' in match:
-                        # 这是Signature参数
-                        signature_match = re.search(r'Signature=([A-Za-z0-9_\-~]+)', match)
-                        if signature_match:
-                            signature = signature_match.group(1)
-                            print(f"🔍 找到Signature参数")
-        
-        # 如果找到了Policy和Signature，构建URL
-        if policy and signature:
-            # JTBC的基础URL通常是这个格式
-            base_url = "https://jtbclive-cdn.jtbc.co.kr/pcweb/newpcweb.stream/chunklist.m3u8"
-            auth_url = f"{base_url}?Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
-            print(f"✅ 构建认证URL成功: {auth_url[:100]}...")
-            return auth_url
-        
-        # 尝试执行JavaScript查找视频源
-        print("💻 执行JavaScript查找视频源...")
-        try:
-            js_scripts = [
-                """
-                // 查找所有视频元素
-                var videos = document.querySelectorAll('video');
-                var sources = [];
-                videos.forEach(v => {
-                    if (v.src) sources.push(v.src);
-                    if (v.currentSrc) sources.push(v.currentSrc);
-                });
-                return sources.filter(s => s.includes('.m3u8') && s.includes('jtbc'));
-                """,
-                """
-                // 查找页面中的m3u8链接
-                var links = [];
-                var scripts = document.querySelectorAll('script');
-                scripts.forEach(s => {
-                    var content = s.textContent;
-                    if (content.includes('jtbclive-cdn.jtbc.co.kr') && content.includes('.m3u8')) {
-                        var matches = content.match(/(https?:\/\/jtbclive-cdn\.jtbc\.co\.kr[^"'\\s]*\.m3u8[^"'\\s]*)/g);
-                        if (matches) links = links.concat(matches);
-                    }
-                });
-                return links;
-                """,
-                """
-                // 查找JTBC播放器配置
-                var configs = [];
-                if (window.jtbcPlayerConfig) {
-                    configs.push(JSON.stringify(window.jtbcPlayerConfig));
-                }
-                if (window.playerConfig) {
-                    configs.push(JSON.stringify(window.playerConfig));
-                }
-                // 搜索全局对象
-                for (var key in window) {
-                    try {
-                        var value = window[key];
-                        if (typeof value === 'object' && value !== null) {
-                            var str = JSON.stringify(value);
-                            if (str.includes('jtbclive-cdn.jtbc.co.kr') && str.includes('.m3u8')) {
-                                configs.push(str);
-                            }
-                        }
-                    } catch(e) {}
-                }
-                return configs;
-                """
-            ]
-            
-            for js_script in js_scripts:
-                try:
-                    result = driver.execute_script(js_script)
-                    if result:
-                        if isinstance(result, list):
-                            for item in result:
-                                if isinstance(item, str):
-                                    if '.m3u8' in item and 'jtbclive-cdn.jtbc.co.kr' in item:
-                                        if 'Policy=' in item and 'Signature=' in item:
-                                            print(f"✅ 从JS找到认证URL: {item[:100]}...")
-                                            return item
-                        elif isinstance(result, str):
-                            if '.m3u8' in result and 'jtbclive-cdn.jtbc.co.kr' in result:
-                                print(f"✅ 从JS找到URL: {result[:100]}...")
-                                return result
-                except Exception as e:
-                    continue
-        
-        except Exception as e:
-            print(f"⚠️ 执行JavaScript时出错: {e}")
-        
-        # 如果还是没找到，尝试点击播放按钮
-        print("🖱️ 尝试点击播放按钮...")
-        try:
-            click_selectors = [
-                "button",
-                ".btn-play",
-                ".play-button",
-                ".jtbc-play",
-                "[class*='play']",
-                "[onclick*='play']",
-                "[onclick*='video']",
-                ".live-play",
-                "#playButton"
-            ]
-            
-            for selector in click_selectors:
-                try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    for element in elements[:5]:  # 只尝试前5个
-                        try:
-                            text = element.text.lower()
-                            element_class = element.get_attribute('class') or ''
-                            
-                            if any(keyword in text for keyword in ['play', '재생', '시작', '보기', '시청', 'live', '라이브']) or \
-                               any(keyword in element_class for keyword in ['play', 'video', 'player', 'live']):
-                                
-                                print(f"🖱️ 点击元素: {text[:20] if text else '无文本'}")
-                                driver.execute_script("arguments[0].scrollIntoView();", element)
-                                driver.execute_script("arguments[0].click();", element)
-                                time.sleep(5)  # 等待网络请求
-                                
-                                # 点击后监控网络
-                                new_urls = extract_m3u8_from_network_logs(driver, ['jtbclive-cdn.jtbc.co.kr'])
-                                new_auth_urls = [url for url in new_urls if 'Policy=' in url and 'Signature=' in url]
-                                
-                                if new_auth_urls:
-                                    print(f"✅ 点击后找到认证URL: {new_auth_urls[0][:100]}...")
-                                    return new_auth_urls[0]
-                        except:
-                            continue
-                except:
-                    continue
-                    
-        except Exception as e:
-            print(f"⚠️ 点击播放按钮时出错: {e}")
-        
-        # 最终尝试：刷新页面重新抓取
-        print("🔄 刷新页面重新尝试...")
-        driver.refresh()
-        time.sleep(10)
-        
-        # 再次监控网络
-        m3u8_urls = extract_m3u8_from_network_logs(driver, ['jtbclive-cdn.jtbc.co.kr'])
-        auth_urls = [url for url in m3u8_urls if 'Policy=' in url and 'Signature=' in url]
-        
-        if auth_urls:
-            print(f"✅ 刷新后找到认证URL: {auth_urls[0][:100]}...")
-            return auth_urls[0]
-        
-        # 如果所有方法都失败，返回None
-        print("❌ 未能获取JTBC链接")
-        return None
-        
-    except Exception as e:
-        print(f"❌ 获取 JTBC 时出错: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return None
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
     """高级方法获取KBS的m3u8链接"""
@@ -972,7 +754,7 @@ def generate_playlist(dynamic_channels):
             lines.append(channel['url'])
             lines.append("")
     
-    # 添加静态频道
+    # 添加静态频道（包括JTBC）
     lines.extend(STATIC_CHANNELS)
     lines.append("")
     
@@ -1008,21 +790,9 @@ def main():
                 print(f"✅ {channel['name']} - 获取成功（双画质）")
                 continue  # 跳过MBN的常规处理
             elif channel['name'] == "JTBC":  # 精确匹配JTBC
-                # JTBC特殊处理
-                try:
-                    m3u8_url = get_jtbc_m3u8(driver)
-                    if m3u8_url:
-                        dynamic_channels.append({
-                            'name': channel['name'],
-                            'tvg_id': channel['tvg_id'],
-                            'url': m3u8_url
-                        })
-                        print(f"✅ {channel['name']} - 获取成功")
-                    else:
-                        print(f"❌ {channel['name']} - 获取失败")
-                except Exception as e:
-                    print(f"❌ 处理频道 {channel['name']} 时出错: {str(e)}")
-                continue  # 跳过JTBC的常规处理
+                # JTBC暂时跳过自动抓取，因为可能需要特定网络环境
+                print(f"⚠️  {channel['name']} - 跳过自动抓取（需要在韩国网络环境）")
+                continue
             else:
                 # KBS频道统一处理
                 try:
@@ -1063,6 +833,10 @@ def main():
         print("\n🎯 成功频道列表:")
         for channel in successful_channels:
             print(f"  ✅ {channel['name']}")
+        
+        print("\n📺 静态频道（包括JTBC）:")
+        print("  📡 JTBC - 使用静态链接（需要在韩国网络环境播放）")
+        print("  📡 其他静态频道 - 可以直接播放")
         
     except Exception as e:
         print(f"❌ 执行过程中出错: {str(e)}")
