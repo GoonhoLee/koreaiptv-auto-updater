@@ -47,12 +47,6 @@ CHANNELS = [
         "url": "https://www.mbn.co.kr/vod/onair",
         "tvg_id": "MBN.kr"
     },
-    # JTBC暂时注释掉，因为可能需要特定网络环境
-    # {
-    #     "name": "JTBC",
-    #     "url": "https://onair.jtbc.co.kr/",
-    #     "tvg_id": "JTBC.kr"
-    # },
     # 以下频道放在最后面
     {
         "name": "KBS DRAMA",
@@ -76,7 +70,7 @@ CHANNELS = [
     }
 ]
 
-# 静态频道列表（更新：添加JTBC静态源）
+# 静态频道列表（保持不变）
 STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
@@ -108,10 +102,7 @@ STATIC_CHANNELS = [
     'https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천',
-    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8',
-    '',
-    '#EXTINF:-1 tvg-id="JTBC.kr",JTBC',
-    'https://jtbclive-cdn.jtbc.co.kr/pcweb/newpcweb.stream/chunklist.m3u8?Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHAqOi8vanRiY2xpdmUtY2RuLmp0YmMuY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2ODYwNjIzMH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=ZdxxAlLyvlBEJHh6YuT2Ne7bNg0EjrA7XdXyxIX9wytnkCl32y7VoD6~YsEYXjbcWMOfiHUz~pBAXk2ZQYukJAP5ueN9PR~Ju5jfD2ZyaQClq9VWxM-d67ydlmzRxBwEcQzi5uG6kGJ7fnUbcXVrNeXQiQ3JnB174mIMRCCpfB8_&Key-Pair-Id=pub_jtbclive-cdn.jtbc.co.kr'
+    'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
 
 # KBS频道基础URL映射
@@ -754,7 +745,7 @@ def generate_playlist(dynamic_channels):
             lines.append(channel['url'])
             lines.append("")
     
-    # 添加静态频道（包括JTBC）
+    # 添加静态频道
     lines.extend(STATIC_CHANNELS)
     lines.append("")
     
@@ -789,10 +780,6 @@ def main():
                 dynamic_channels.extend(mbn_channels)
                 print(f"✅ {channel['name']} - 获取成功（双画质）")
                 continue  # 跳过MBN的常规处理
-            elif channel['name'] == "JTBC":  # 精确匹配JTBC
-                # JTBC暂时跳过自动抓取，因为可能需要特定网络环境
-                print(f"⚠️  {channel['name']} - 跳过自动抓取（需要在韩国网络环境）")
-                continue
             else:
                 # KBS频道统一处理
                 try:
@@ -833,10 +820,6 @@ def main():
         print("\n🎯 成功频道列表:")
         for channel in successful_channels:
             print(f"  ✅ {channel['name']}")
-        
-        print("\n📺 静态频道（包括JTBC）:")
-        print("  📡 JTBC - 使用静态链接（需要在韩国网络环境播放）")
-        print("  📡 其他静态频道 - 可以直接播放")
         
     except Exception as e:
         print(f"❌ 执行过程中出错: {str(e)}")
