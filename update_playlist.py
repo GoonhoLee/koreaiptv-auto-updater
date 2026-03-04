@@ -394,114 +394,166 @@ def wait_for_kbs_advertisement(driver):
     print("✅ 广告等待结束")
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """高级方法获取KBS的m3u8链接（使用CDP实时监听）"""
+    """
+    增强版 KBS m3u8 获取器：
+    1. 使用 CDP 实时监听网络请求（捕获带认证参数的 URL）
+    2. 若失败，从页面源码中提取 Policy 和 Signature 并手动构造
+    3. 最后使用基础 URL 作为备用
+    """
+    print(f"🎬 正在获取 {channel_name}...")
+
+    # 清除之前的网络日志
+    driver.get_log('performance')
+    # 启用 CDP 网络监听
+    driver.execute_cdp_cmd('Network.enable', {})
+
+    captured_urls = []
+    # 定义网络请求回调
+    def on_request_will_be_sent(request):
+        req_url = request['request']['url']
+        if '.m3u8' in req_url and 'gscdn.kbs.co.kr' in req_url:
+            print(f"📡 捕获到 m3u8 请求: {req_url[:150]}...")
+            captured_urls.append(req_url)
+
+    # 添加监听器（Selenium 4 支持）
+    driver.add_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
+
     try:
-        print(f"🎬 正在获取 {channel_name}...")
-        
-        # 清除之前的网络日志
-        driver.get_log('performance')
-        
-        # 启用CDP网络监听
-        driver.execute_cdp_cmd('Network.enable', {})
-        captured_urls = []
-        
-        # 定义网络请求回调
-        def on_request_will_be_sent(request):
-            req_url = request['request']['url']
-            if '.m3u8' in req_url and 'gscdn.kbs.co.kr' in req_url:
-                print(f"📡 捕获到m3u8请求: {req_url[:100]}...")
-                captured_urls.append(req_url)
-        
-        # 添加监听器（Selenium 4支持）
-        driver.add_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
-        
         # 访问页面
         print(f"🌐 访问 {channel_name} 页面...")
         driver.get(url)
-        time.sleep(10)  # 等待页面初步加载
-        
-        # 尝试点击播放按钮或直接触发视频播放
+        time.sleep(8)  # 等待初始加载
+
+        # 等待视频元素出现（最多15秒）
         try:
-            # 等待视频元素出现（最多15秒）
             WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.TAG_NAME, "video"))
             )
             print("🎥 视频元素已出现")
-            
-            # 尝试多种方式触发播放
-            # 方式1: 查找并点击播放按钮（根据KBS页面常见特征）
-            play_selectors = [
-                "button[class*='play']", "button[id*='play']",
-                "div[class*='play']", "span[class*='play']",
-                "a[onclick*='play']", "[aria-label*='play']",
-                ".btn-play", ".play-button", ".player-play"
-            ]
-            clicked = False
-            for selector in play_selectors:
+        except Exception as e:
+            print(f"⚠️ 等待视频元素超时: {e}")
+
+        # ---------- 播放触发 ----------
+        # 尝试多种方式触发播放
+        play_triggered = False
+
+        # 方法1：查找并点击播放按钮（常见选择器）
+        play_selectors = [
+            "button[class*='play']", "button[id*='play']",
+            "div[class*='play']", "span[class*='play']",
+            "a[onclick*='play']", "[aria-label*='play']",
+            ".btn-play", ".play-button", ".player-play",
+            "button:has-text('재생')", "button:has-text('시청')"
+        ]
+        for selector in play_selectors:
+            try:
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
                 for el in elements:
                     if el.is_displayed() and el.is_enabled():
                         driver.execute_script("arguments[0].scrollIntoView();", el)
                         time.sleep(0.5)
                         driver.execute_script("arguments[0].click();", el)
-                        print(f"🖱️ 点击了播放按钮: {selector}")
-                        clicked = True
+                        print(f"🖱️ 点击了元素: {selector}")
+                        play_triggered = True
                         break
-                if clicked:
+                if play_triggered:
                     break
-            
-            if not clicked:
-                # 方式2: 直接调用video.play()
+            except:
+                continue
+
+        # 方法2：直接调用 video.play()
+        if not play_triggered:
+            try:
                 driver.execute_script("""
                     var v = document.querySelector('video');
                     if(v) {
                         v.play();
-                        console.log('直接调用video.play()');
+                        console.log('直接调用 video.play()');
                     }
                 """)
                 print("🎬 直接执行 video.play()")
-        except Exception as e:
-            print(f"⚠️ 播放触发失败: {e}")
-        
-        # 等待广告结束（广告通常在点击播放后开始）
+                play_triggered = True
+            except Exception as e:
+                print(f"⚠️ video.play() 失败: {e}")
+
+        # 方法3：查找并点击任何包含 "play" 或 "재생" 文本的元素（暴力但不精确）
+        if not play_triggered:
+            try:
+                candidates = driver.find_elements(By.XPATH, "//*[contains(text(), 'play') or contains(text(), '재생') or contains(text(), '시작') or contains(text(), '시청')]")
+                for el in candidates[:10]:  # 最多尝试10个
+                    if el.is_displayed() and el.is_enabled():
+                        driver.execute_script("arguments[0].click();", el)
+                        print(f"🖱️ 点击了文本元素: {el.text[:20]}")
+                        play_triggered = True
+                        time.sleep(2)
+                        break
+            except:
+                pass
+
+        # ---------- 等待广告和请求 ----------
+        # 等待广告（30秒）
         wait_for_kbs_advertisement(driver)
-        
-        # 继续等待捕获m3u8请求（最长60秒）
+
+        # 继续等待捕获 m3u8 请求（最长60秒）
         timeout = time.time() + 60
         while time.time() < timeout and not captured_urls:
             time.sleep(2)
-            print("⏳ 等待m3u8请求...")
-        
+            print("⏳ 等待 m3u8 请求...")
+
         # 移除监听器
         driver.remove_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
-        
-        # 优先选择带认证参数的URL
+
+        # 优先选择带认证参数的 URL
         for u in captured_urls:
             if 'Policy=' in u and 'Signature=' in u:
-                print(f"✅ 找到带认证参数的URL: {u[:100]}...")
+                print(f"✅ 通过 CDP 捕获到带认证参数的 URL")
                 return u
-        
-        # 如果捕获到不带认证的URL，也返回（可能可播放）
+
         if captured_urls:
-            print(f"⚠️ 找到基础URL（无认证参数）: {captured_urls[0][:100]}...")
+            print(f"⚠️ CDP 捕获到基础 URL（无认证参数），尝试使用")
             return captured_urls[0]
-        
-        # 如果CDP监听失败，尝试后备方法
-        print("🔄 CDP未捕获到URL，尝试深度分析页面...")
-        m3u8_url = deep_analyze_kbs_page(driver, channel_name)
-        if m3u8_url:
-            return m3u8_url
-        
-        # 最后使用基础URL
-        print(f"❌ 所有方法都失败，使用基础URL: {channel_name}")
+
+        # ---------- 如果 CDP 监听失败，尝试从页面源码提取参数 ----------
+        print("🔄 CDP 未捕获到 URL，尝试从页面源码提取 Policy 和 Signature...")
+        page_source = driver.page_source
+
+        # 提取 Policy 和 Signature（正则匹配）
+        policy_match = re.search(r'Policy=([A-Za-z0-9_\-~]+)', page_source)
+        signature_match = re.search(r'Signature=([A-Za-z0-9_\-~]+)', page_source)
+
+        if policy_match and signature_match:
+            policy = policy_match.group(1)
+            signature = signature_match.group(1)
+            base_url = KBS_BASE_URLS.get(channel_name)
+            if base_url:
+                # 固定 Key-Pair-Id（来自你手动抓取的示例）
+                key_pair_id = "APKAICDSGT3Y7IXGJ3TA"
+                constructed_url = f"{base_url}?Policy={policy}&Key-Pair-Id={key_pair_id}&Signature={signature}"
+                print(f"✅ 通过页面参数构造 URL 成功")
+                return constructed_url
+            else:
+                print(f"❌ 找不到 {channel_name} 的基础 URL")
+
+        # ---------- 最后尝试深度分析（保留原方法） ----------
+        print("🔄 尝试深度分析页面...")
+        deep_url = deep_analyze_kbs_page(driver, channel_name)
+        if deep_url:
+            return deep_url
+
+        # ---------- 终极备用：基础 URL ----------
+        print(f"❌ 所有方法失败，使用基础 URL")
         return KBS_BASE_URLS.get(channel_name)
-        
+
     except Exception as e:
-        print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
+        print(f"❌ 获取 {channel_name} 时发生异常: {str(e)}")
         import traceback
         traceback.print_exc()
+        # 确保移除监听器
+        try:
+            driver.remove_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
+        except:
+            pass
         return None
-
 def get_real_mbn_url_from_response(auth_url):
     """从MBN认证链接的响应内容获取真实m3u8地址"""
     try:
