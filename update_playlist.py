@@ -74,11 +74,11 @@ CHANNELS = [
 STATIC_CHANNELS = [
     '#EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv',
-    'http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8',
+    'https://onaircdn.tvchosun.com/origin1/_definst_/tvchosun_s3/chunklist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)',
     '#EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv',
-    'http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8',
+    'https://onair2cdn.tvchosun.com/origin2/_definst_/tvchosun_s1/chunklist.m3u8',
     '',
     '#EXTINF:-1 tvg-id="YTN.kr",YTN',
     'https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8',
@@ -105,7 +105,7 @@ STATIC_CHANNELS = [
     'https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8'
 ]
 
-# KBS频道基础URL映射
+# KBS频道基础URL映射（备用）
 KBS_BASE_URLS = {
     "KBS1": "https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8",
     "KBS2": "https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8",
@@ -136,6 +136,7 @@ def setup_driver():
     chrome_options.add_argument('--disable-backgrounding-occluded-windows')
     chrome_options.add_argument('--disable-renderer-backgrounding')
     
+    # 启用性能日志（用于CDP监听）
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     
     service = Service(ChromeDriverManager().install())
@@ -147,7 +148,7 @@ def setup_driver():
     return driver
 
 def extract_m3u8_from_network_logs(driver, target_domains=None):
-    """从网络日志中提取m3u8链接"""
+    """从网络日志中提取m3u8链接（用于MBN等）"""
     m3u8_urls = []
     try:
         logs = driver.get_log('performance')
@@ -178,7 +179,7 @@ def extract_m3u8_from_network_logs(driver, target_domains=None):
     return list(set(m3u8_urls))
 
 def deep_analyze_kbs_page(driver, channel_name):
-    """深度分析KBS页面，寻找认证参数"""
+    """深度分析KBS页面，寻找认证参数（后备方法）"""
     print(f"🔍 深度分析 {channel_name} 页面...")
     
     try:
@@ -393,133 +394,107 @@ def wait_for_kbs_advertisement(driver):
     print("✅ 广告等待结束")
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """高级方法获取KBS的m3u8链接"""
+    """高级方法获取KBS的m3u8链接（使用CDP实时监听）"""
     try:
         print(f"🎬 正在获取 {channel_name}...")
         
         # 清除之前的网络日志
         driver.get_log('performance')
         
+        # 启用CDP网络监听
+        driver.execute_cdp_cmd('Network.enable', {})
+        captured_urls = []
+        
+        # 定义网络请求回调
+        def on_request_will_be_sent(request):
+            req_url = request['request']['url']
+            if '.m3u8' in req_url and 'gscdn.kbs.co.kr' in req_url:
+                print(f"📡 捕获到m3u8请求: {req_url[:100]}...")
+                captured_urls.append(req_url)
+        
+        # 添加监听器（Selenium 4支持）
+        driver.add_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
+        
         # 访问页面
         print(f"🌐 访问 {channel_name} 页面...")
         driver.get(url)
+        time.sleep(10)  # 等待页面初步加载
         
-        # 等待页面完全加载
-        print("⏳ 等待页面完全加载...")
-        time.sleep(10)
-        
-        # 等待广告
-        wait_for_kbs_advertisement(driver)
-        
-        # 第一次深度分析
-        print("🔍 第一次深度分析...")
-        m3u8_url = deep_analyze_kbs_page(driver, channel_name)
-        
-        if m3u8_url and 'Policy=' in m3u8_url and 'Signature=' in m3u8_url:
-            print(f"✅ 第一次分析找到认证URL: {m3u8_url[:100]}...")
-            return m3u8_url
-        
-        # 如果没找到，尝试刷新页面
-        print("🔄 刷新页面重新尝试...")
-        driver.refresh()
-        time.sleep(15)
-        
-        # 等待广告
-        wait_for_kbs_advertisement(driver)
-        
-        # 第二次深度分析
-        print("🔍 第二次深度分析...")
-        m3u8_url = deep_analyze_kbs_page(driver, channel_name)
-        
-        if m3u8_url and 'Policy=' in m3u8_url and 'Signature=' in m3u8_url:
-            print(f"✅ 第二次分析找到认证URL: {m3u8_url[:100]}...")
-            return m3u8_url
-        
-        # 监控网络请求
-        print("📡 监控网络请求...")
-        m3u8_urls = extract_m3u8_from_network_logs(driver, ['gscdn.kbs.co.kr'])
-        
-        # 过滤出认证URL
-        auth_urls = [url for url in m3u8_urls if 'Policy=' in url and 'Signature=' in url]
-        
-        if auth_urls:
-            print(f"✅ 从网络请求找到 {len(auth_urls)} 个认证URL")
-            selected_url = auth_urls[0]
-            print(f"🔗 选择: {selected_url[:100]}...")
-            return selected_url
-        
-        # 如果还是没找到，尝试模拟点击播放
-        print("🖱️ 尝试模拟用户点击播放...")
+        # 尝试点击播放按钮或直接触发视频播放
         try:
-            # 查找并点击所有可能的播放元素
-            click_selectors = [
-                "button",
-                ".btn-play",
-                ".play-button",
-                "[class*='play']",
-                "[onclick*='play']",
-                "[onclick*='video']",
-                "a[href*='javascript']",
-                "div[class*='player']",
-                "div[class*='video']"
+            # 等待视频元素出现（最多15秒）
+            WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.TAG_NAME, "video"))
+            )
+            print("🎥 视频元素已出现")
+            
+            # 尝试多种方式触发播放
+            # 方式1: 查找并点击播放按钮（根据KBS页面常见特征）
+            play_selectors = [
+                "button[class*='play']", "button[id*='play']",
+                "div[class*='play']", "span[class*='play']",
+                "a[onclick*='play']", "[aria-label*='play']",
+                ".btn-play", ".play-button", ".player-play"
             ]
+            clicked = False
+            for selector in play_selectors:
+                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                for el in elements:
+                    if el.is_displayed() and el.is_enabled():
+                        driver.execute_script("arguments[0].scrollIntoView();", el)
+                        time.sleep(0.5)
+                        driver.execute_script("arguments[0].click();", el)
+                        print(f"🖱️ 点击了播放按钮: {selector}")
+                        clicked = True
+                        break
+                if clicked:
+                    break
             
-            for selector in click_selectors:
-                try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    for element in elements[:5]:  # 只尝试前5个
-                        try:
-                            text = element.text.lower()
-                            element_class = element.get_attribute('class') or ''
-                            element_id = element.get_attribute('id') or ''
-                            
-                            if any(keyword in text for keyword in ['play', '재생', '시작', '보기', '시청']) or \
-                               any(keyword in element_class for keyword in ['play', 'video', 'player']) or \
-                               any(keyword in element_id for keyword in ['play', 'video', 'player']):
-                                
-                                print(f"🖱️ 点击元素: {text[:20] if text else '无文本'}")
-                                driver.execute_script("arguments[0].scrollIntoView();", element)
-                                driver.execute_script("arguments[0].click();", element)
-                                time.sleep(3)
-                                
-                                # 点击后监控网络
-                                new_urls = extract_m3u8_from_network_logs(driver, ['gscdn.kbs.co.kr'])
-                                new_auth_urls = [url for url in new_urls if 'Policy=' in url and 'Signature=' in url]
-                                
-                                if new_auth_urls:
-                                    print(f"✅ 点击后找到认证URL: {new_auth_urls[0][:100]}...")
-                                    return new_auth_urls[0]
-                        except:
-                            continue
-                except:
-                    continue
+            if not clicked:
+                # 方式2: 直接调用video.play()
+                driver.execute_script("""
+                    var v = document.querySelector('video');
+                    if(v) {
+                        v.play();
+                        console.log('直接调用video.play()');
+                    }
+                """)
+                print("🎬 直接执行 video.play()")
         except Exception as e:
-            print(f"⚠️ 点击播放时出错: {e}")
+            print(f"⚠️ 播放触发失败: {e}")
         
-        # 最终尝试：从页面中提取可能的URL并添加认证参数
-        print("🔍 最终尝试：构建认证URL...")
-        page_source = driver.page_source
+        # 等待广告结束（广告通常在点击播放后开始）
+        wait_for_kbs_advertisement(driver)
         
-        # 尝试提取Policy和Signature
-        policy_match = re.search(r'Policy=([A-Za-z0-9_\-~]+)', page_source)
-        signature_match = re.search(r'Signature=([A-Za-z0-9_\-~]+)', page_source)
+        # 继续等待捕获m3u8请求（最长60秒）
+        timeout = time.time() + 60
+        while time.time() < timeout and not captured_urls:
+            time.sleep(2)
+            print("⏳ 等待m3u8请求...")
         
-        if policy_match and signature_match:
-            policy = policy_match.group(1)
-            signature = signature_match.group(1)
-            
-            if channel_name in KBS_BASE_URLS:
-                base_url = KBS_BASE_URLS[channel_name]
-                auth_url = f"{base_url}?Policy={policy}&Key-Pair-Id=APKAICDSGT3Y7IXGJ3TA&Signature={signature}"
-                print(f"✅ 构建认证URL成功: {auth_url[:100]}...")
-                return auth_url
+        # 移除监听器
+        driver.remove_cdp_listener('Network.requestWillBeSent', on_request_will_be_sent)
         
-        # 如果所有方法都失败，使用基础URL
+        # 优先选择带认证参数的URL
+        for u in captured_urls:
+            if 'Policy=' in u and 'Signature=' in u:
+                print(f"✅ 找到带认证参数的URL: {u[:100]}...")
+                return u
+        
+        # 如果捕获到不带认证的URL，也返回（可能可播放）
+        if captured_urls:
+            print(f"⚠️ 找到基础URL（无认证参数）: {captured_urls[0][:100]}...")
+            return captured_urls[0]
+        
+        # 如果CDP监听失败，尝试后备方法
+        print("🔄 CDP未捕获到URL，尝试深度分析页面...")
+        m3u8_url = deep_analyze_kbs_page(driver, channel_name)
+        if m3u8_url:
+            return m3u8_url
+        
+        # 最后使用基础URL
         print(f"❌ 所有方法都失败，使用基础URL: {channel_name}")
-        if channel_name in KBS_BASE_URLS:
-            return KBS_BASE_URLS[channel_name]
-        
-        return None
+        return KBS_BASE_URLS.get(channel_name)
         
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
@@ -774,12 +749,12 @@ def main():
             print(f"\n{'='*50}")
             print(f"🔍 正在处理频道: {channel['name']}")
             
-            if channel['name'] == "MBN":  # 精确匹配MBN
+            if channel['name'] == "MBN":
                 # MBN特殊处理 - 多画质版本
                 mbn_channels = get_mbn_m3u8_multiple_quality(driver)
                 dynamic_channels.extend(mbn_channels)
                 print(f"✅ {channel['name']} - 获取成功（双画质）")
-                continue  # 跳过MBN的常规处理
+                continue
             else:
                 # KBS频道统一处理
                 try:
