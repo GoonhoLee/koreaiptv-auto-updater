@@ -1,39 +1,19 @@
 #EXTM3U
-<<<<<<< Updated upstream
-# 自动生成时间: 2026-03-03 19:47:59
-=======
-# 自动生成时间: 2026-03-04 11:35:56
->>>>>>> Stashed changes
-
-#EXTINF:-1 tvg-id="KBS1.kr",KBS1
-https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8
-
-#EXTINF:-1 tvg-id="KBS2.kr",KBS2
-https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8
-
-#EXTINF:-1 tvg-id="KBS24.kr",KBS 24
-https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8
+# 自动生成时间: 2026-03-04 12:44:42
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
-<<<<<<< Updated upstream
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjY1MzEwNn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=JofTVxU~sw0rS~oGOPx9MzFPX2GaJYDFN9vEe9-ZC7mS31Gge6xH~DfxuJq3GBGXDIIAU2YfJXCNTF2B9I9uSy3yURxqvhFHKQt6iL0Uexp7KfHPpDG0j8~EA2yTQCI~nbmQuGjtqahEJNjyyseqI0O54zLYb70j6utVjaZ8Ovs_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjcxNDY4MH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=jPqcD5elMIa5yxRi77fXtAw8vZYvjlm-gLSeKSgIH1XZVbYXEN6v-H5myGasEKn5FOnU0YyDgc5sLA8jFuV9mgYpd5Emy9j4uFcOJ~EmP35YZeTP5n1aaTNuUeR8OEr47qpOclzwVMdrrqNjJEetLQwyxdMiGrU90BnMfD9GeEE_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjY1MzEwOH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=nvFOW8bGFhx6a27luVr5MFlWGwteLTCFt-mPSu7wg9LbEJ-0PsGQqAeXaTOtsGVO9DypXwJAZt6zVTGaK0qb9cHG-zkpLZ-vnWmeINtCs93qve4jqBZM0mZxoTy~SIAMVtFZ~2mXBAfTCApOG~gSoQeAki-F7yG54FVfvJMcZAE_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-=======
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjcwOTk4M30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=Y6IPKKX~tDTUqYCHZ7x6tUUN7SJaPdv5vavEqcqaKBQbumRM9nyxZ1K8e3ON-usItGaWZooW0Uc6IWN5E80h~hpP97MFak7B~bPmiug3WfAflAqQd~XCy9X~UQXaR168mwj7KFikr6d9UtpIm4R42CoqBnpCQcWQdUK2sZ5t7qo_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-
-#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjcwOTk4M30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=Y6IPKKX~tDTUqYCHZ7x6tUUN7SJaPdv5vavEqcqaKBQbumRM9nyxZ1K8e3ON-usItGaWZooW0Uc6IWN5E80h~hpP97MFak7B~bPmiug3WfAflAqQd~XCy9X~UQXaR168mwj7KFikr6d9UtpIm4R42CoqBnpCQcWQdUK2sZ5t7qo_&Key-Pair-Id=pub_hls-live.mbn.co.kr
->>>>>>> Stashed changes
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MjcxNDY4Mn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=C5-NkonGxbW8LCpbSPW3KKfkvZco2oLMee2G6w2bfTXeENPuTwPYBRoAUB3ZU3wMcZqyFgqK1IMzV5-bLEbms3tDRT6mB3QJUn-5l0dunW0QUckoXDuZ14~dKhYQ~jRdEQRFXow0QZwCP81sjNY2A3pEYOoxf5YPiaH~kxCg9R4_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
-http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8
+https://onaircdn.tvchosun.com/origin1/_definst_/tvchosun_s3/chunklist.m3u8
 
 #EXTINF:-1 tvg-id="TVChosun2.kr",TV Chosun 2 (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on2.cstv
-http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8
+https://onair2cdn.tvchosun.com/origin2/_definst_/tvchosun_s1/chunklist.m3u8
 
 #EXTINF:-1 tvg-id="YTN.kr",YTN
 https://ytnlive.ytn.co.kr/ytn/_definst_/ytnlive_stream_20220426/medialist_9171188557012390620_hls.m3u8
@@ -58,15 +38,3 @@ https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8
 
 #EXTINF:-1 tvg-id="MBCChuncheon.kr" group-title="🐉한국방송🦆",MBC춘천
 https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8
-
-#EXTINF:-1 tvg-id="KBSDRAMA.kr",KBS DRAMA
-https://kbsndrama.gscdn.kbs.co.kr/kbsndrama-02/kbsndrama-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSJOY.kr",KBS JOY
-https://kbsnjoy.gscdn.kbs.co.kr/kbsnjoy-02/kbsnjoy-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSSTORY.kr",KBS STORY
-https://kbsnw.gscdn.kbs.co.kr/kbsnw-02/kbsnw-02_sd.m3u8
-
-#EXTINF:-1 tvg-id="KBSLIFE.kr",KBS LIFE
-https://kbsnlife.gscdn.kbs.co.kr/kbsnlife-02/kbsnlife-02_sd.m3u8
