@@ -395,13 +395,14 @@ def wait_for_kbs_advertisement(driver):
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
     """
-    获取 KBS 的 m3u8 链接（不使用 add_cdp_listener，改用轮询 performance logs）
+    获取 KBS 的 m3u8 链接（改进版）
     1. 访问页面，等待加载
     2. 尝试点击播放按钮
     3. 等待广告
     4. 反复提取 performance logs 中的 m3u8 请求
-    5. 若失败，从页面源码提取 Policy/Signature 构造 URL
-    6. 最后使用基础 URL 备用
+    5. 从页面脚本中直接搜索完整的带参数URL（最可靠）
+    6. 若失败，从页面源码提取 Policy/Signature 构造 URL
+    7. 最后使用基础 URL 备用
     """
     print(f"🎬 正在获取 {channel_name}...")
 
@@ -463,6 +464,18 @@ def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str)
     # 等待广告（假设广告在播放后开始）
     wait_for_kbs_advertisement(driver)
 
+    # ---------- 从页面脚本中直接搜索完整的带参数URL ----------
+    print("🔍 尝试从页面脚本中搜索完整带参数的URL...")
+    page_source = driver.page_source
+    # 匹配包含 gscdn.kbs.co.kr 和 Policy= 及 Signature= 的完整URL
+    full_url_pattern = r'(https?://[^\s"\']*gscdn\.kbs\.co\.kr[^\s"\']*\.m3u8\?[^\s"\']*Policy=[^\s"\']*Signature=[^\s"\']*)'
+    matches = re.findall(full_url_pattern, page_source)
+    if matches:
+        # 去重并返回第一个
+        unique_matches = list(set(matches))
+        print(f"✅ 从页面找到完整带参数URL: {unique_matches[0][:150]}...")
+        return unique_matches[0]
+
     # ---------- 轮询 performance logs 捕获 m3u8 请求 ----------
     captured_urls = []
     target_domains = ['gscdn.kbs.co.kr']
@@ -480,7 +493,7 @@ def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str)
         # 如果捕获到带认证参数的 URL，直接返回
         for u in captured_urls:
             if 'Policy=' in u and 'Signature=' in u:
-                print(f"✅ 找到带认证参数的 URL")
+                print(f"✅ 从网络日志找到带认证参数的 URL")
                 return u
 
         # 等待 2 秒后继续
