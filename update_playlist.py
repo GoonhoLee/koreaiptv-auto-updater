@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-全自动方案 - 终极修复版v2：浏览器级API直连，无视请求拦截
+全自动方案 - 终极修复版v3：网页内部 Fetch 注入防拦截
 """
 
 import requests
@@ -128,7 +128,7 @@ def extract_m3u8_from_network_logs(driver, target_domains=None):
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """修复版v2：使用浏览器环境直接访问API并解析JSON"""
+    """修复版v3：在KBS主域名内注入Fetch请求，携带完美上下文"""
     print(f"🎬 正在获取 {channel_name}...")
     
     try:
@@ -137,29 +137,39 @@ def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str)
             ch_code = ch_code_match.group(1)
             api_url = f"https://cfpwwwapi.kbs.co.kr/api/v1/landing/live/channel_code/{ch_code}"
             
-            print(f"📡 浏览器正在直连API: {api_url}")
-            driver.get(api_url)
-            time.sleep(1) # 给浏览器一点时间渲染纯文本
+            # 🌟 步骤1：先访问KBS的首页，拿到合法的网页环境和Cookie
+            print(f"🌐 正在搭建KBS底层环境伪装...")
+            driver.get("https://onair.kbs.co.kr")
+            time.sleep(2) # 给网站一点时间写Cookie
             
-            # 读取网页body中的JSON文本
-            body_text = driver.find_element(By.TAG_NAME, 'body').text
+            # 🌟 步骤2：利用原生网页环境，发送Fetch请求
+            print(f"📡 正在网页内部注入API请求...")
+            fetch_script = f"""
+            var done = arguments[0];
+            fetch('{api_url}')
+                .then(r => r.json())
+                .then(data => done(data))
+                .catch(err => done({{error: err.toString()}}));
+            """
+            driver.set_script_timeout(10)
+            data = driver.execute_async_script(fetch_script)
             
-            try:
-                data = json.loads(body_text)
+            if data and not data.get('error'):
                 channel_items = data.get("channel_item", [])
                 if channel_items:
                     service_url = channel_items[0].get("service_url")
                     if service_url and ".m3u8" in service_url:
-                        print(f"✅ [突破成功] 截获真实地址: {service_url[:80]}...")
+                        print(f"✅ [完美伪装成功] 截获真实地址: {service_url[:80]}...")
                         return service_url
-                print(f"⚠️ API返回了数据，但没有找到频道链接。返回内容前段: {body_text[:150]}")
-            except json.JSONDecodeError:
-                print(f"⚠️ 无法解析为JSON。网页返回了: {body_text[:150]}")
+                    elif service_url == "":
+                        print(f"⚠️ [警告] 环境伪装成功，但 service_url 依然为空！KBS可能对机房IP进行了彻底封锁！")
+            else:
+                print(f"⚠️ 网页内请求异常: {data.get('error')}")
                 
     except Exception as e:
         print(f"❌ 获取 {channel_name} 时发生异常: {str(e)}")
 
-    print(f"❌ 依然未能获取认证M3U8，退回到基础URL...")
+    print(f"❌ 退回到基础URL...")
     return KBS_BASE_URLS.get(channel_name)
 
 # ========== MBN 处理逻辑 ==========
