@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自动抓取韩国电视台M3U8源并更新GitHub仓库
-全自动方案 - 终极修复版：加入KBS原生API直连 + 强行自动播放解除限制
+全自动方案 - 终极修复版v2：浏览器级API直连，无视请求拦截
 """
 
 import requests
@@ -11,7 +11,7 @@ import json
 import os
 import base64
 from datetime import datetime
-from typing import Optional, Dict, List
+from typing import Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -20,7 +20,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # 配置信息
 GITHUB_USERNAME = "GoonhoLee"
-STABLE_REPO_NAME = "koreaiptv-auto-updater" # 修正了你的仓库名
+STABLE_REPO_NAME = "koreaiptv-auto-updater" 
 FULL_ACCESS_TOKEN = os.getenv('FULL_ACCESS_TOKEN')
 
 # 电视台配置
@@ -88,11 +88,8 @@ def setup_driver():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
-    
-    # 🌟 核心修复1：允许无头浏览器自动播放视频（解决 KBS 播放器卡主不请求的问题）
     chrome_options.add_argument('--autoplay-policy=no-user-gesture-required')
     chrome_options.add_argument('--mute-audio')
-    
     chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
@@ -127,65 +124,43 @@ def extract_m3u8_from_network_logs(driver, target_domains=None):
                                 m3u8_urls.append(url)
             except Exception:
                 continue
-    except Exception as e:
-        print(f"⚠️ 读取网络日志时出错: {e}")
+    except Exception: pass
     return list(set(m3u8_urls))
 
 def get_kbs_m3u8_advanced(driver: webdriver.Chrome, url: str, channel_name: str) -> Optional[str]:
-    """修复版：API直连拦截 + 自动播放修复"""
+    """修复版v2：使用浏览器环境直接访问API并解析JSON"""
     print(f"🎬 正在获取 {channel_name}...")
     
-    # 🌟 核心修复2：直接抓取 KBS 底层 API (无视浏览器环境，速度极快)
     try:
         ch_code_match = re.search(r'ch_code=([^&]+)', url)
         if ch_code_match:
             ch_code = ch_code_match.group(1)
             api_url = f"https://cfpwwwapi.kbs.co.kr/api/v1/landing/live/channel_code/{ch_code}"
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                "Origin": "https://onair.kbs.co.kr",
-                "Referer": "https://onair.kbs.co.kr/"
-            }
-            resp = requests.get(api_url, headers=headers, timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
+            
+            print(f"📡 浏览器正在直连API: {api_url}")
+            driver.get(api_url)
+            time.sleep(1) # 给浏览器一点时间渲染纯文本
+            
+            # 读取网页body中的JSON文本
+            body_text = driver.find_element(By.TAG_NAME, 'body').text
+            
+            try:
+                data = json.loads(body_text)
                 channel_items = data.get("channel_item", [])
                 if channel_items:
                     service_url = channel_items[0].get("service_url")
-                    if service_url and ".m3u8" in service_url and "Policy=" in service_url:
-                        print(f"✅ [API提取] 成功秒取真实地址: {service_url[:80]}...")
+                    if service_url and ".m3u8" in service_url:
+                        print(f"✅ [突破成功] 截获真实地址: {service_url[:80]}...")
                         return service_url
+                print(f"⚠️ API返回了数据，但没有找到频道链接。返回内容前段: {body_text[:150]}")
+            except json.JSONDecodeError:
+                print(f"⚠️ 无法解析为JSON。网页返回了: {body_text[:150]}")
+                
     except Exception as e:
-        print(f"⚠️ API直连失败，正在切换至浏览器模拟模式: {e}")
+        print(f"❌ 获取 {channel_name} 时发生异常: {str(e)}")
 
-    # 如果 API 失败，退回使用浏览器抓包 (此时自动播放已解除限制)
-    try:
-        driver.get_log('performance') 
-        driver.get(url)
-        print("⏳ 页面已加载，监控真实地址生成 (最多等待15秒)...")
-        
-        start_time = time.time()
-        while time.time() - start_time < 15:
-            found_url = driver.execute_script("""
-                var logs = window.performance.getEntriesByType('resource');
-                for (var i=0; i < logs.length; i++) {
-                    if (logs[i].name.includes('.m3u8') && logs[i].name.includes('Policy=')) {
-                        return logs[i].name;
-                    }
-                }
-                return null;
-            """)
-            
-            if found_url:
-                print(f"✅ [浏览器提取] 成功截获带认证参数的URL: {found_url[:80]}...")
-                return found_url
-            time.sleep(2) 
-            
-        print(f"❌ 未能获取到带认证的M3U8，退回到基础URL...")
-        return KBS_BASE_URLS.get(channel_name)
-    except Exception as e:
-        print(f"❌ 获取 {channel_name} 时出错: {str(e)}")
-        return KBS_BASE_URLS.get(channel_name)
+    print(f"❌ 依然未能获取认证M3U8，退回到基础URL...")
+    return KBS_BASE_URLS.get(channel_name)
 
 # ========== MBN 处理逻辑 ==========
 
@@ -260,8 +235,7 @@ def update_stable_repository(content):
         if response.status_code in [200, 201]:
             print("🎉 GitHub仓库更新成功!")
             return True
-    except Exception as e:
-        print(f"❌ 更新GitHub出错: {e}")
+    except Exception: pass
     return False
 
 def generate_playlist(dynamic_channels):
