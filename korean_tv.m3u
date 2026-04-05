@@ -1,5 +1,5 @@
 #EXTM3U
-# 自动生成时间: 2026-04-04 19:40:13
+# 自动生成时间: 2026-04-05 19:42:38
 
 #EXTINF:-1 tvg-id="KBS1.kr",KBS1
 https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8
@@ -11,10 +11,10 @@ https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8
 https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NTQxNzQzNn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=GmcLDj71PgV8GtAVaME4pe~a2jU~c3wm2Am~bPSp6JcD-TkNdttl5fsgBWDYcfHQhmQnwqxqUvIXlq6-y2ChF1hYoeqzloNouRN~NEJGwaD~zsIUw-L6-AG-oCzw2rynFwIAK8Z5U4pHd4AY4I9Y9msaxqz~5trPMFvfrPE4wVY_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NTUwMzk3N30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=rCmgEFclPmAjPnJDLMQS1~5qJ~2BJKMUUkb080ihxeU6je9qwjGByNUffh~IO26lt8fvRvckmm2iWPYP-aTJZznyPUXfRsiLvDXPi-zNn07E6pyVEQioz2lrZqX7M8722ZMsB796rsVcUNQrEL~j1KInw4ja0AfZfi-MwZ6UAXw_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NTQxNzQzN30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=NJRYbTJ8-TS9j4SU2wzFMH46kUJsqHcNZGsOn2hPwzNWf5scH4u-MitwQkUDVY8ACc5TnwoE-LgaMkhk3HYLSxYoEWZpF-JBqWrOW9m70sREKasb6c03eI4OaXBPgUkCmrlph~92Xo1kK6vfZHTIY6HUB4n2KjCOrwjnCO344JQ_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NTUwMzk3OH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=MicEN6DoJHS1~bzbi-PO9iNOo1aK0KzVDbvBjfqS~GfBWb3YLU~but60Brf5g0k0Z-JOIDrBL-zqY2WRVvFHzFmIlAkTtAzg10AlP-yV8-2Q6GgP5ISXK7KllG6BWejzP6E4PCNQGkvjVWjSGOYHFtSqlcHVGBub7BNKGwBSWSY_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
