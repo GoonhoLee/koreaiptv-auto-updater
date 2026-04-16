@@ -48,14 +48,16 @@ jobs:
       run: |
         python update_playlist.py || exit 1
 
-    - name: Commit and push changes
+    - name: Commit and push to GitHub and Gitee
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
       run: |
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
-        # 使用 GITHUB_TOKEN 设置远程 URL
+        # 使用 GITHUB_TOKEN 设置 GitHub 远程 URL
         git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
         
         echo "🔄 同步远程仓库..."
@@ -72,10 +74,18 @@ jobs:
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
-        # 推送更改
-        echo "🚀 推送更改..."
+        # 1. 推送更改到 GitHub
+        echo "🚀 推送到 GitHub..."
         git push origin main
-        echo "✅ 变更已提交"
+        
+        # 2. 推送更改到 Gitee
+        echo "🚀 推送到 Gitee..."
+        GITEE_REPO="korean-tv-static" 
+        REMOTE_URL="https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_USERNAME}/${GITEE_REPO}.git"
+        git remote add gitee "${REMOTE_URL}"
+        git push gitee main --force
+        
+        echo "✅ 变更已成功同步到 GitHub 和 Gitee 平台"
 
     - name: Upload playlist as artifact
       uses: actions/upload-artifact@v4
