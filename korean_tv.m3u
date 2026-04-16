@@ -1,17 +1,5 @@
 #EXTM3U
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-# 自动生成时间: 2026-04-15 20:14:01
-=======
-# 自动生成时间: 2026-04-16 00:31:10
->>>>>>> Stashed changes
-=======
-# 自动生成时间: 2026-04-16 00:38:39
->>>>>>> Stashed changes
-=======
-# 自动生成时间: 2026-04-16 05:02:55
->>>>>>> Stashed changes
+# 自动生成时间: 2026-04-16 20:10:51
 
 #EXTINF:-1 tvg-id="KBS1.kr",KBS1
 https://1tv.gscdn.kbs.co.kr/1tv_3.m3u8
@@ -23,31 +11,10 @@ https://2tv.gscdn.kbs.co.kr/2tv_1.m3u8
 https://news24.gscdn.kbs.co.kr/news24-02/news24-02_hd.m3u8
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（高画质）
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM2OTg2Nn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=a5QSJ~8VnptnuutbUzOgaYdB5Ar0ugtK8IPmk5snhBGcjRUm5ZEo4iz-3C5pJWxu~wslpXgY8cgAP0i2VnU60Fm9UKX~bSwUMnOmCt148DP0qQD1qW8wclQWoMpOwSe3F4LMARmQWEMmO-qDsqW1IOkWRSpJvDagn-LtSGlxN-I_&Key-Pair-Id=pub_hls-live.mbn.co.kr
+https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjQ1NjA3Mn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=DdpjvbtXe~cS-w-2AwF5mUciwFjznzv6gkyexOgdXs7itLfWhbFDjYQCiF6Ll9Id2e6GaoCSRYuq3xG~xhVIhMAX8dj0FLm5aUwJzxHBDkDbJp-RBAdCbsVQc302DQ0EmwLkBG1rdvUPqgJ~xoqYQLTMUr7EtWRFsSH8Rp5OK5s_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM2OTg2N30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=dYvBYwCxlSo8cRQIj62cAocd0tK2L7f8wo6fwb51O4Qw3HQEn4xMA5TMfWrIzmm3CKD0gMbCcO~z71rJzbMLFMowsAkfE~4IBFxavkuMARC3qgfH1p9FHdJAdqo22ctlahm0kkFs2RQZBmUL3NQZsjxuHEUMGDqgc4~VWqHlHzM_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-=======
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM4NTI5M30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=McSWZsT4UO7SIA4MsEQXnLRjZ1yXR-KitRwPLbO4W3IcgQikemAZ7RFHVNlEatdOgPWhxK7lBz~wkIjeoCT8DRcBBMaXK5FgzHLE5rqmkSpeDxPNegHjiQjm1ol4x3N~31teQ0v7jDeiUEpIeRs9gQpzbywdmqDsj0u7K6K6mo4_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-
-#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM4NTI5NH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=Rd43~EpmPZhuReUk71Azonf8t2gvpmzUDT7luysUmQw4fIpZqpExFaVQCybpTY94sdfPfDOzAg0qZjtQTwQo~3XAyNwFTu6aDwSpCfbr4Aa1nd~QW41QgkKInMLYqDyxjG226Wn8ayt37ercbzxvJ8EDEzzHPRxAj3HbvGBoUK0_&Key-Pair-Id=pub_hls-live.mbn.co.kr
->>>>>>> Stashed changes
-=======
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM4NTc0MX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=kXebd0Ue64dLM5Z1e4~gw77A9EgDl6OjH1gnnSiHP4SyPanGPbmJXYTljRJvp2kwnl8EHR8b0KItHfHsEEJvnAl2T63~loIOx2xLHbzl18i-VMc7YuxGq852hSbrCQ1YEPnMZoUGIDZbgGXG50rVms8mYTvbnhFpmbwxYjK4jYI_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-
-#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjM4NTc0Mn0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=uHQMVR5Rb5dXN9F-2suTl-3pVmQkItJT2wjd584aVHu7CC8tptxSr~F5V4mk4o4PA47htSjo29aqgo3ORxfHVPFV1SAhfg~7PQK0FCeNkuodV1aG8PT4rM473kSEVU-jleQo-sH2ySjXIkthSBNjKhgDCy-jIDnjH9xEmpoDNxA_&Key-Pair-Id=pub_hls-live.mbn.co.kr
->>>>>>> Stashed changes
-=======
-https://hls-live.mbn.co.kr/mbn-on-air/1000k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjQwMTYwMH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=D0DGW0n0443Y7HSwNhKyMYgIsQhmHA5xqol5Q-ekGbzCgrayXKVE1Dw7fqGlHzF3kFHXEHLTyqLWQKqKrXiBLZLATeBsh3U7~fk5KmqoUm04vvZdH8BS-Mo2BKSDOX4enjNHigubStnn9rzYszADCHZYFvqfK2aBC15wn5EzKf4_&Key-Pair-Id=pub_hls-live.mbn.co.kr
-
-#EXTINF:-1 tvg-id="MBN.kr",MBN（标清）
-https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjQwMTYwMX0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=PpxpTPQggVC5Fb-mr1f8DIXddqj9QXv5QucHMC5uctXPC9L76YrTe9SbGXrehoEQsubVomWHQiIW4SG99-zlbG0bqbS2kB98PXl9-NimOnoi5kz1Gkec5aec8hy99gNKrlTxbRj8bBSQ4lAjjogqMj7mVlkZGGURsq9qd~9gjAE_&Key-Pair-Id=pub_hls-live.mbn.co.kr
->>>>>>> Stashed changes
+https://hls-live.mbn.co.kr/mbn-on-air/600k/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cCo6Ly9obHMtbGl2ZS5tYm4uY28ua3IvKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3NjQ1NjA3M30sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=2spiaKSvf-fhMIsebQVsdFO2x5IXhD6Z2zrVkWEvrUpghAoPUisxZbX8Zk7K5yKkhaNWEsTBJ~HC-03Ohs5cH7-pXMUoD0zLWcgcAdl8Ddv5ut7t2F6oXdSFpkkZIL0zJ7zSIHW6rX8izt1tLhu4RUUiFKYpvZ5-He59mvwjtd0_&Key-Pair-Id=pub_hls-live.mbn.co.kr
 
 #EXTINF:-1 tvg-id="TVChosun.kr",TV Chosun (720p)
 #EXTVLCOPT:http-referrer=http://broadcast.tvchosun.com/onair/on.cstv
