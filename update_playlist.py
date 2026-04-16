@@ -816,7 +816,7 @@ def main():
         print("✅ 播放列表生成完成!")
 
         # 更新GitHub仓库
-        update_stable_repository(standard_playlist)
+        # update_stable_repository(standard_playlist)
 
         # 保存到本地文件
         with open('korean_tv.m3u', 'w', encoding='utf-8') as f:
