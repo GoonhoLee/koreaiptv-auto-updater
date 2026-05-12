@@ -1,95 +1,63 @@
+🎬 韩国电视台直播源 M3U 播放列表
+自动抓取韩国电视台直播源并生成 M3U 播放列表，支持 KBS、MBN、TV朝鲜、YTN 等多个频道。
 
-## 🔧 技术实现
+📺 支持的频道列表
+🎥 主要频道
+KBS1 - KBS 1TV
+KBS2 - KBS 2TV
+KBS 24 - KBS 24小时新闻
+MBN - 每日广播（提供高画质和标清双版本）
+TV Chosun - 朝鲜电视台
+TV Chosun 2 - 朝鲜电视台2
+YTN - YTN新闻频道
+🎭 KBS专业频道
+KBS DRAMA - KBS电视剧频道
+KBS JOY - KBS娱乐频道
+KBS STORY - KBS故事频道
+KBS LIFE - KBS生活频道
+🔗 播放列表地址
+https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u
 
-### 核心技术栈
-- **Python 3.9+**：主要脚本语言
-- **Selenium**：自动化浏览器操作，处理动态加载内容
-- **Chrome Headless**：无头浏览器运行环境
-- **GitHub Actions**：自动化工作流，定时执行
-- **webdriver-manager**：自动管理 ChromeDriver 版本
+备用地址
+https://gist.githubusercontent.com/GoonhoLee/1eefb097a9b3ec25c79bbd4149066d41/raw/korean_tv.m3u
 
-### 工作流程
-1. **定时触发**：每天 UTC 19:00（中国时间次日 03:00）自动运行
-2. **频道抓取**：
-   - KBS 频道：深度分析页面获取认证参数，提取带签名的 M3U8 链接
-   - MBN 频道：同时获取高画质（1000k）和标清（600k）两个版本
-3. **播放列表生成**：按频道分类生成标准 M3U8 格式文件
-4. **多平台同步**：自动推送到 GitHub 和 Gitee 仓库
+🚀 使用方法
+1. 在播放器中使用
+VLC Media Player: 媒体 → 打开网络串流 → 粘贴上述URL
+PotPlayer: 打开 → 打开链接 → 粘贴URL
+Kodi: 添加到PVR客户端
+Tivimate: 添加M3U播放列表
+2. 在代码中使用
+import requests
 
-### KBS 频道抓取特点
-- ✅ 自动处理页面广告等待
-- ✅ 多层级深度解析：HTML 源码 → JavaScript 变量 → 网络请求监控
-- ✅ 智能认证参数提取（Policy、Signature、Key-Pair-Id）
-- ✅ 多重回退机制确保抓取成功率
+url = "https://raw.githubusercontent.com/GoonhoLee/korean-tv-static/main/korean_tv.m3u"
+response = requests.get(url)
+playlist_content = response.text
 
-### MBN 频道抓取特点
-- ✅ 双画质版本支持（高画质 + 标清）
-- ✅ 自动认证链接解析
-- ✅ 备用链接兜底机制
+🔄 更新频率
+自动更新: 每48小时（UTC时间0点）
 
-## 📊 更新频率
+手动触发: 支持通过GitHub Actions手动立即更新
 
-- **自动更新**：每日 1 次（北京时间凌晨 3:00）
-- **手动更新**：支持通过 GitHub Actions 手动触发
-- **即时更新**：修改 `update_playlist.py` 文件时自动触发
+实时监控: 自动检测源失效并切换备用源
 
-## 🌐 镜像站点
+⚠️ 免责声明
+本项目仅提供技术研究和学习使用
 
-| 平台 | 仓库地址 | 用途 |
-|------|---------|------|
-| GitHub | [GoonhoLee/korean-tv-static](https://github.com/GoonhoLee/korean-tv-static) | 主要仓库 |
-| Gitee | [GoonhoLee/korean-tv-static](https://gitee.com/GoonhoLee/korean-tv-static) | 国内镜像 |
+所有直播源均来自官方公开渠道
 
-## 📝 注意事项
+请遵守当地法律法规，合理使用资源
 
-### 网络要求
-- 🔒 **KBS 频道**：需要能访问 `gscdn.kbs.co.kr`
-- 🔒 **JTBC 频道**：需要韩国 IP 地址才能播放
-- 🔒 **MBN 频道**：需要能访问 `hls-live.mbn.co.kr`
-- ✅ **其他频道**：大部分无特殊网络要求
+不保证所有源的长期稳定性和可用性
 
-### 播放建议
-- 🕐 更新时间为北京时间凌晨，建议在更新后 1-2 小时使用
-- 📡 部分频道可能需要特定地区的网络环境
-- 🔄 直播链接具有时效性，建议使用最新版本的播放列表
-- ⚡ 高画质频道可能需要更稳定的网络连接
+🤝 贡献
+欢迎提交Issue和Pull Request来改进项目！
 
-## 🤝 贡献指南
+报告失效的播放源
 
-欢迎提交 Issue 或 Pull Request！
+建议新的频道源
 
-### 报告问题
-如果发现频道无法播放，请提供：
-1. 具体的频道名称
-2. 错误信息或截图
-3. 您的网络环境（地区、是否使用 VPN）
+改进代码和文档
 
-### 添加新频道
-1. Fork 本仓库
-2. 在 `CHANNELS` 配置中添加新频道信息
-3. 实现对应的抓取逻辑
-4. 提交 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## ⚠️ 免责声明
-
-本项目仅供学习和研究使用，请遵守相关法律法规：
-- 本项目的所有内容仅用于技术研究和学习目的
-- 请尊重电视台的版权和合法权益
-- 使用者应自行承担使用风险
-- 本项目不对播放内容的可用性和合法性负责
-
-## 📞 联系方式
-
-- **Issues**：[GitHub Issues](https://github.com/GoonhoLee/korean-tv-static/issues)
-- **Gitee Issues**：[Gitee Issues](https://gitee.com/GoonhoLee/korean-tv-static/issues)
-
----
-
-<div align="center">
-  <p>如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！</p>
-  <p>Made with ❤️ for Korean TV enthusiasts</p>
-</div>
+📄 许可证
+本项目采用 MIT 许可证 - 查看 LICENSE 文件了解详情。
