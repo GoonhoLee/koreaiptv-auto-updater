@@ -13,23 +13,22 @@ permissions:
 
 jobs:
   update-playlist:
-    # 【核心修复】固定运行器版本，避免 ubuntu-latest 自动升级到 26.04
-    runs-on: ubuntu-24.04
+    # 使用最新的 ubuntu-latest（当前为 26.04），配合 Python 3.12 完美兼容
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     
     steps:
     - name: Checkout repository
-      # 【升级 Action 版本】消除 Node.js 20 弃用警告
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
 
     - name: Set up Python
-      # 【核心修复】升级到 v6 版本，并指定 Python 3.9
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        # 【关键修复】放弃 3.9，升级到 3.12，彻底解决 Ubuntu 26.04 不兼容的问题
+        python-version: '3.12'
 
     - name: Install Chrome browser
       run: |
