@@ -3,7 +3,7 @@ name: "Update Korean TV M3U Playlist"
 on:
   schedule:
     - cron: '0 19 * * *'  # 每天UTC时间19:00运行，对应中国时间次日03:00
-  workflow_dispatch:
+  workflow_dispatch:      # 允许手动点击按钮运行
   push:
     paths:
       - 'update_playlist.py'
@@ -13,20 +13,20 @@ permissions:
 
 jobs:
   update-playlist:
-    # 关键修复 1：明确指定 ubuntu-24.04，避免自动指向 26.04 导致 Python 3.9 无法安装
+    # 【关键修复】明确指定 Ubuntu 24.04，避免使用最新的 26.04 导致 Python 3.9 安装失败
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     
     steps:
     - name: Checkout repository
-      # 关键修复 2：升级到 v6，适配 Node 24 运行时并消除弃用警告
+      # 【关键修复】升级到 v6，消除 Node.js 20 的弃用警告
       uses: actions/checkout@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
 
     - name: Set up Python
-      # 关键修复 2：升级到 v6
+      # 【关键修复】升级到 v6，消除警告
       uses: actions/setup-python@v6
       with:
         python-version: '3.9'
@@ -60,23 +60,28 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
+        # 使用 GITHUB_TOKEN 设置 GitHub 远程 URL
         git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
         
         echo "🔄 同步远程仓库..."
         git pull origin main --rebase --autostash
         
+        # 检查是否有更改
         if git diff --quiet && git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
         
+        # 提交更改
         echo "💾 提交更改..."
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
+        # 1. 推送更改到 GitHub
         echo "🚀 推送到 GitHub..."
         git push origin main
         
+        # 2. 推送更改到 Gitee
         echo "🚀 推送到 Gitee..."
         GITEE_REPO="korean-tv-static" 
         REMOTE_URL="https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_USERNAME}/${GITEE_REPO}.git"
