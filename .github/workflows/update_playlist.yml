@@ -3,7 +3,7 @@ name: "Update Korean TV M3U Playlist"
 on:
   schedule:
     - cron: '0 19 * * *'  # 每天UTC时间19:00运行，对应中国时间次日03:00
-  workflow_dispatch:      # 允许手动点击按钮运行
+  workflow_dispatch:
   push:
     paths:
       - 'update_playlist.py'
@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   update-playlist:
-    # 使用最新的 ubuntu-latest（当前为 26.04），配合 Python 3.12 完美兼容
     runs-on: ubuntu-latest
     timeout-minutes: 30
     
@@ -25,10 +24,9 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
-        # 【关键修复】放弃 3.9，升级到 3.12，彻底解决 Ubuntu 26.04 不兼容的问题
-        python-version: '3.12'
+        python-version: '3.9'
 
     - name: Install Chrome browser
       run: |
@@ -59,27 +57,32 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         
+        # 使用 GITHUB_TOKEN 设置 GitHub 远程 URL
         git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
         
         echo "🔄 同步远程仓库..."
         git pull origin main --rebase --autostash
         
+        # 检查是否有更改
         if git diff --quiet && git diff --staged --quiet; then
           echo "📝 没有检测到文件变更，跳过提交"
           exit 0
         fi
         
+        # 提交更改
         echo "💾 提交更改..."
         git add -A
         git commit -m "Auto-update playlist - $(date +'%Y-%m-%d %H:%M:%S')"
         
+        # 1. 推送更改到 GitHub
         echo "🚀 推送到 GitHub..."
         git push origin main
         
+        # 2. 推送更改到 Gitee
         echo "🚀 推送到 Gitee..."
         GITEE_REPO="korean-tv-static" 
         REMOTE_URL="https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_USERNAME}/${GITEE_REPO}.git"
-        git remote add gitee "${REMOTE_URL}" || true
+        git remote add gitee "${REMOTE_URL}"
         git push gitee main --force
         
         echo "✅ 变更已成功同步到 GitHub 和 Gitee 平台"
