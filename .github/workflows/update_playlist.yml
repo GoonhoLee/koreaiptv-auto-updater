@@ -2,7 +2,7 @@ name: "Update Korean TV M3U Playlist"
 
 on:
   schedule:
-    - cron: '0 19 * * *'  # 每天UTC时间19:00运行
+    - cron: '0 19 * * *'  # 每天UTC时间19:00运行，对应中国时间次日03:00
   workflow_dispatch:
   push:
     paths:
@@ -13,21 +13,21 @@ permissions:
 
 jobs:
   update-playlist:
-    # 关键修复：将 ubuntu-latest 改为 ubuntu-24.04，确保 Python 3.9 可以正常安装
+    # 关键修复 1：明确指定 ubuntu-24.04，避免自动指向 26.04 导致 Python 3.9 无法安装
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     
     steps:
     - name: Checkout repository
-      # 适配 Node.js 24 运行时，消除 Node 20 弃用告警
-      uses: actions/checkout@v4
+      # 关键修复 2：升级到 v6，适配 Node 24 运行时并消除弃用警告
+      uses: actions/checkout@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
 
     - name: Set up Python
-      # 升级到 v5 版本，提升兼容性
-      uses: actions/setup-python@v5
+      # 关键修复 2：升级到 v6
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
 
